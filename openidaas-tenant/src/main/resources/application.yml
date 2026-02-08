@@ -1,0 +1,25 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: openidaas-tenant
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/openidaas
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+openidaas:
+  tenant:
+    default-max-users: 100
+
+logging:
+  level:
+    com.qoobot.openidaas: DEBUG

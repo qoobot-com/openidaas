@@ -1,0 +1,24 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: openidaas-samples
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/openidaas
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+openidaas:
+  enabled: true
+
+logging:
+  level:
+    com.qoobot.openidaas: DEBUG

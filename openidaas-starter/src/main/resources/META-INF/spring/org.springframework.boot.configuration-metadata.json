@@ -1,0 +1,157 @@
+{
+  "groups": [
+    {
+      "name": "openidaas",
+      "type": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties",
+      "sourceType": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties",
+      "description": "OpenIDaaS 配置属性"
+    },
+    {
+      "name": "openidaas.auth",
+      "type": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties$AuthProperties",
+      "sourceType": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties",
+      "description": "认证配置"
+    },
+    {
+      "name": "openidaas.auth.jwt",
+      "type": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties$JwtProperties",
+      "sourceType": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties",
+      "description": "JWT 配置"
+    },
+    {
+      "name": "openidaas.security",
+      "type": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties$SecurityProperties",
+      "sourceType": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties",
+      "description": "安全配置"
+    },
+    {
+      "name": "openidaas.security.password-policy",
+      "type": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties$PasswordPolicyProperties",
+      "sourceType": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties",
+      "description": "密码策略配置"
+    },
+    {
+      "name": "openidaas.security.mfa",
+      "type": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties$MfaProperties",
+      "sourceType": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties",
+      "description": "MFA 配置"
+    },
+    {
+      "name": "openidaas.tenant",
+      "type": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties$TenantProperties",
+      "sourceType": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties",
+      "description": "租户配置"
+    },
+    {
+      "name": "openidaas.monitoring",
+      "type": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties$MonitoringProperties",
+      "sourceType": "com.qoobot.openidaas.starter.properties.OpenIDaaSProperties",
+      "description": "监控配置"
+    }
+  ],
+  "properties": [
+    {
+      "name": "openidaas.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "是否启用 OpenIDaaS"
+    },
+    {
+      "name": "openidaas.auth.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "是否启用认证功能"
+    },
+    {
+      "name": "openidaas.auth.jwt.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "是否启用 JWT"
+    },
+    {
+      "name": "openidaas.auth.jwt.secret",
+      "type": "java.lang.String",
+      "defaultValue": "openidaas-default-secret-key-change-in-production",
+      "description": "JWT 密钥"
+    },
+    {
+      "name": "openidaas.auth.jwt.expiration",
+      "type": "java.lang.Long",
+      "defaultValue": 3600,
+      "description": "Access Token 过期时间（秒）"
+    },
+    {
+      "name": "openidaas.auth.jwt.refresh-expiration",
+      "type": "java.lang.Long",
+      "defaultValue": 2592000,
+      "description": "Refresh Token 过期时间（秒）"
+    },
+    {
+      "name": "openidaas.security.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "是否启用安全功能"
+    },
+    {
+      "name": "openidaas.security.password-policy.min-length",
+      "type": "java.lang.Integer",
+      "defaultValue": 8,
+      "description": "密码最小长度"
+    },
+    {
+      "name": "openidaas.security.password-policy.max-length",
+      "type": "java.lang.Integer",
+      "defaultValue": 128,
+      "description": "密码最大长度"
+    },
+    {
+      "name": "openidaas.security.mfa.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "是否启用 MFA"
+    },
+    {
+      "name": "openidaas.tenant.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "是否启用多租户"
+    },
+    {
+      "name": "openidaas.tenant.isolation-strategy",
+      "type": "java.lang.String",
+      "defaultValue": "SCHEMA",
+      "description": "租户隔离策略"
+    },
+    {
+      "name": "openidaas.monitoring.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "是否启用监控"
+    },
+    {
+      "name": "openidaas.monitoring.health-check-enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "是否启用健康检查"
+    }
+  ],
+  "hints": [
+    {
+      "name": "openidaas.tenant.isolation-strategy",
+      "values": [
+        {
+          "value": "NONE",
+          "description": "不隔离"
+        },
+        {
+          "value": "SCHEMA",
+          "description": "Schema 级别隔离"
+        },
+        {
+          "value": "DATABASE",
+          "description": "数据库级别隔离"
+        }
+      ]
+    }
+  ]
+}

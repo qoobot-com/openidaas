@@ -1,0 +1,84 @@
+# ============================================================================
+# OpenIDaaS Dockerfile
+# Multi-stage build for optimized production image
+# ============================================================================
+
+# ============================================================================
+# Stage 1: Build
+# ============================================================================
+FROM eclipse-temurin:25-alpine AS builder
+
+# Set working directory
+WORKDIR /build
+
+# Install build dependencies
+RUN apk add --no-cache \
+    git \
+    maven
+
+# Copy Maven wrapper and pom.xml
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+
+# Download dependencies (cache layer)
+RUN ./mvnw dependency:go-offline -B
+
+# Copy source code
+COPY src ./src
+
+# Build application
+RUN ./mvnw clean package -DskipTests -B
+
+# ============================================================================
+# Stage 2: Runtime
+# ============================================================================
+FROM eclipse-temurin:25-jre-alpine
+
+# Install runtime dependencies and security updates
+RUN apk add --no-cache \
+    curl \
+    tini \
+    tzdata \
+    && \
+    apk upgrade --no-cache
+
+# Set timezone
+ENV TZ=Asia/Shanghai
+
+# Create non-root user for security
+RUN addgroup -g 1000 openidaas && \
+    adduser -D -u 1000 -G openidaas openidaas
+
+# Set working directory
+WORKDIR /app
+
+# Copy application JAR from builder
+COPY --from=builder /build/openidaas-*/target/*.jar app.jar
+
+# Change ownership to non-root user
+RUN chown -R openidaas:openidaas /app
+
+# Switch to non-root user
+USER openidaas
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
+
+# Expose application port
+EXPOSE 8080
+
+# Use tinit as init system for proper signal handling
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# JVM options for production
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+              -XX:MaxRAMPercentage=75.0 \
+              -XX:+UseG1GC \
+              -XX:+HeapDumpOnOutOfMemoryError \
+              -XX:HeapDumpPath=/tmp/heapdump.hprof \
+              -Djava.security.egd=file:/dev/./urandom"
+
+# Start application
+CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

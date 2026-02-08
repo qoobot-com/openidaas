@@ -1,0 +1,418 @@
+# OpenIDaaS 告警规则配置
+# 支持的系统指标、业务指标、安全指标告警
+
+groups:
+  - name: openidaas_system
+    interval: 30s
+    rules:
+      # CPU 使用率告警
+      - alert: HighCPUUsage
+        expr: avg(rate(process_cpu_usage{job=~"openidaas.*"}[5m])) by (instance) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+        annotations:
+          summary: "实例 {{ $labels.instance }} CPU 使用率过高"
+          description: "实例 {{ $labels.instance }} CPU 使用率 {{ $value | humanizePercentage }}，超过 80% 持续 5 分钟"
+
+      - alert: CriticalCPUUsage
+        expr: avg(rate(process_cpu_usage{job=~"openidaas.*"}[5m])) by (instance) > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          service: openidaas
+        annotations:
+          summary: "实例 {{ $labels.instance }} CPU 使用率严重过高"
+          description: "实例 {{ $labels.instance }} CPU 使用率 {{ $value | humanizePercentage }}，超过 95% 持续 2 分钟"
+
+      # 内存使用率告警
+      - alert: HighMemoryUsage
+        expr: jvm_memory_used_bytes{job=~"openidaas.*", area="heap"} / jvm_memory_max_bytes{job=~"openidaas.*", area="heap"} > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          service: openidaas
+        annotations:
+          summary: "实例 {{ $labels.instance }} JVM 堆内存使用率过高"
+          description: "实例 {{ $labels.instance }} 堆内存使用率 {{ $value | humanizePercentage }}，超过 80% 持续 10 分钟"
+
+      - alert: CriticalMemoryUsage
+        expr: jvm_memory_used_bytes{job=~"openidaas.*", area="heap"} / jvm_memory_max_bytes{job=~"openidaas.*", area="heap"} > 0.95
+        for: 5m
+        labels:
+          severity: critical
+          service: openidaas
+        annotations:
+          summary: "实例 {{ $labels.instance }} JVM 堆内存使用率严重过高"
+          description: "实例 {{ $labels.instance }} 堆内存使用率 {{ $value | humanizePercentage }}，超过 95% 持续 5 分钟"
+
+      # 响应时间告警
+      - alert: HighResponseTimeP95
+        expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=~"openidaas.*"}[5m])) by (le)) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+        annotations:
+          summary: "HTTP 请求 P95 响应时间过高"
+          description: "P95 响应时间 {{ $value }}s，超过 2 秒持续 5 分钟"
+
+      - alert: HighResponseTimeP99
+        expr: histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{job=~"openidaas.*"}[5m])) by (le)) > 3
+        for: 3m
+        labels:
+          severity: warning
+          service: openidaas
+        annotations:
+          summary: "HTTP 请求 P99 响应时间过高"
+          description: "P99 响应时间 {{ $value }}s，超过 3 秒持续 3 分钟"
+
+      # GC 频率告警
+      - alert: HighGCFrequency
+        expr: rate(jvm_gc_pause_seconds_count{job=~"openidaas.*"}[5m]) > 1
+        for: 10m
+        labels:
+          severity: warning
+          service: openidaas
+        annotations:
+          summary: "实例 {{ $labels.instance }} GC 频率过高"
+          description: "GC 频率 {{ $value }}/s，超过 1 次/秒持续 10 分钟"
+
+      - alert: HighGCTime
+        expr: rate(jvm_gc_pause_seconds_sum{job=~"openidaas.*"}[5m]) / rate(jvm_gc_pause_seconds_count{job=~"openidaas.*"}[5m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          service: openidaas
+        annotations:
+          summary: "实例 {{ $labels.instance }} GC 时间过长"
+          description: "平均 GC 时间 {{ $value }}s，超过 100ms 持续 10 分钟"
+
+      # 服务可用性告警
+      - alert: ServiceDown
+        expr: up{job=~"openidaas.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: openidaas
+        annotations:
+          summary: "服务 {{ $labels.job }} 实例 {{ $labels.instance }} 不可用"
+          description: "服务 {{ $labels.job }} 实例 {{ $labels.instance }} 已宕机超过 1 分钟"
+
+  - name: openidaas_business
+    interval: 30s
+    rules:
+      # 认证失败率告警
+      - alert: HighAuthFailureRate
+        expr: sum(rate(auth_failure_total{job=~"openidaas.*"}[5m])) / sum(rate(auth_total{job=~"openidaas.*"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+          category: business
+        annotations:
+          summary: "认证失败率过高"
+          description: "认证失败率 {{ $value | humanizePercentage }}，超过 5% 持续 5 分钟"
+
+      - alert: CriticalAuthFailureRate
+        expr: sum(rate(auth_failure_total{job=~"openidaas.*"}[5m])) / sum(rate(auth_total{job=~"openidaas.*"}[5m])) > 0.1
+        for: 3m
+        labels:
+          severity: critical
+          service: openidaas
+          category: business
+        annotations:
+          summary: "认证失败率严重过高"
+          description: "认证失败率 {{ $value | humanizePercentage }}，超过 10% 持续 3 分钟"
+
+      # Token 刷新失败告警
+      - alert: HighTokenRefreshFailureRate
+        expr: sum(rate(token_refresh_failure_total{job=~"openidaas.*"}[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+          category: business
+        annotations:
+          summary: "Token 刷新失败率过高"
+          description: "Token 刷新失败 {{ $value }} 次/分钟，超过 10 次/分钟持续 5 分钟"
+
+      - alert: CriticalTokenRefreshFailureRate
+        expr: sum(rate(token_refresh_failure_total{job=~"openidaas.*"}[5m])) > 50
+        for: 3m
+        labels:
+          severity: critical
+          service: openidaas
+          category: business
+        annotations:
+          summary: "Token 刷新失败率严重过高"
+          description: "Token 刷新失败 {{ $value }} 次/分钟，超过 50 次/分钟持续 3 分钟"
+
+      # 认证 QPS 告警
+      - alert: LowAuthQPS
+        expr: sum(rate(auth_total{job=~"openidaas.*"}[5m])) < 0.1
+        for: 10m
+        labels:
+          severity: info
+          service: openidaas
+          category: business
+        annotations:
+          summary: "认证 QPS 异常偏低"
+          description: "认证 QPS {{ $value }}，低于 0.1 持续 10 分钟"
+
+      - alert: HighAuthQPS
+        expr: sum(rate(auth_total{job=~"openidaas.*"}[5m])) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+          category: business
+        annotations:
+          summary: "认证 QPS 异常偏高"
+          description: "认证 QPS {{ $value }}，超过 1000 持续 5 分钟"
+
+      # 数据库连接池告警
+      - alert: HighDBConnectionUsage
+        expr: hikaricp_connections_active{job=~"openidaas.*"} / hikaricp_connections_max{job=~"openidaas.*"} > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+          category: business
+        annotations:
+          summary: "数据库连接池使用率过高"
+          description: "连接池使用率 {{ $value | humanizePercentage }}，超过 80% 持续 5 分钟"
+
+      - alert: CriticalDBConnectionUsage
+        expr: hikaricp_connections_active{job=~"openidaas.*"} / hikaricp_connections_max{job=~"openidaas.*"} > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          service: openidaas
+          category: business
+        annotations:
+          summary: "数据库连接池使用率严重过高"
+          description: "连接池使用率 {{ $value | humanizePercentage }}，超过 95% 持续 2 分钟"
+
+  - name: openidaas_security
+    interval: 30s
+    rules:
+      # 登录失败告警
+      - alert: HighLoginFailureRate
+        expr: sum(rate(auth_failure_total{job=~"openidaas.*", reason="invalid_credentials"}[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+          category: security
+        annotations:
+          summary: "登录失败率过高"
+          description: "每分钟 {{ $value }} 次登录失败（凭证错误），超过 10 次/分钟持续 5 分钟"
+
+      - alert: CriticalLoginFailureRate
+        expr: sum(rate(auth_failure_total{job=~"openidaas.*", reason="invalid_credentials"}[5m])) > 50
+        for: 3m
+        labels:
+          severity: critical
+          service: openidaas
+          category: security
+        annotations:
+          summary: "登录失败率严重过高"
+          description: "每分钟 {{ $value }} 次登录失败（凭证错误），超过 50 次/分钟持续 3 分钟，可能存在暴力破解"
+
+      # 异常访问告警
+      - alert: AnomalousAccessDetected
+        expr: rate(anomalous_access_total{job=~"openidaas.*"}[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+          category: security
+        annotations:
+          summary: "检测到异常访问"
+          description: "检测到 {{ $value }}/秒 的异常访问，类型：{{ $labels.type }}"
+
+      # 权限违规告警
+      - alert: AuthorizationViolation
+        expr: rate(authorization_denied_total{job=~"openidaas.*"}[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+          category: security
+        annotations:
+          summary: "权限违规频繁"
+          description: "每分钟 {{ $value }} 次权限拒绝，资源：{{ $labels.resource }}，操作：{{ $labels.action }}"
+
+      - alert: CriticalAuthorizationViolation
+        expr: rate(authorization_denied_total{job=~"openidaas.*"}[5m]) > 50
+        for: 3m
+        labels:
+          severity: critical
+          service: openidaas
+          category: security
+        annotations:
+          summary: "权限违规严重"
+          description: "每分钟 {{ $value }} 次权限拒绝，可能存在权限绕过攻击"
+
+      # Token 泄露告警
+      - alert: TokenLeakDetected
+        expr: rate(token_leak_detected_total{job=~"openidaas.*"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: openidaas
+          category: security
+        annotations:
+          summary: "检测到 Token 泄露"
+          description: "检测到 Token 泄露，类型：{{ $labels.type }}，用户：{{ $labels.user_id }}"
+
+      # 多因素认证失败告警
+      - alert: HighMFAFailureRate
+        expr: sum(rate(mfa_verification_failure_total{job=~"openidaas.*"}[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+          category: security
+        annotations:
+          summary: "MFA 验证失败率过高"
+          description: "MFA 验证失败 {{ $value }}/分钟，可能存在攻击"
+
+      # 账户锁定告警
+      - alert: HighAccountLockRate
+        expr: sum(rate(account_locked_total{job=~"openidaas.*"}[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+          category: security
+        annotations:
+          summary: "账户锁定频率过高"
+          description: "账户锁定 {{ $value }}/分钟，可能存在暴力破解"
+
+      # 密码重置请求告警
+      - alert: HighPasswordResetRate
+        expr: sum(rate(password_reset_request_total{job=~"openidaas.*"}[5m])) > 20
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+          category: security
+        annotations:
+          summary: "密码重置请求过多"
+          description: "密码重置请求 {{ $value }}/分钟，可能存在攻击"
+
+  - name: openidaas_tenant
+    interval: 30s
+    rules:
+      # 租户活跃度告警
+      - alert: LowTenantActivity
+        expr: tenant_active_users{job=~"openidaas.*"} < 10
+        for: 1h
+        labels:
+          severity: info
+          service: openidaas
+          category: tenant
+        annotations:
+          summary: "租户 {{ $labels.tenant_id }} 活跃度过低"
+          description: "租户 {{ $labels.tenant_id }} 活跃用户数 {{ $value }}，低于 10"
+
+      # 租户配额告警
+      - alert: TenantQuotaExceeded
+        expr: (tenant_users_total{job=~"openidaas.*"} / tenant_users_limit{job=~"openidaas.*"}) > 0.9
+        for: 10m
+        labels:
+          severity: warning
+          service: openidaas
+          category: tenant
+        annotations:
+          summary: "租户 {{ $labels.tenant_id }} 用户配额即将用尽"
+          description: "租户 {{ $labels.tenant_id }} 已用 {{ $value | humanizePercentage }} 用户配额"
+
+      - alert: TenantQuotaCritical
+        expr: (tenant_users_total{job=~"openidaas.*"} / tenant_users_limit{job=~"openidaas.*"}) > 0.98
+        for: 5m
+        labels:
+          severity: critical
+          service: openidaas
+          category: tenant
+        annotations:
+          summary: "租户 {{ $labels.tenant_id }} 用户配额即将耗尽"
+          description: "租户 {{ $labels.tenant_id }} 已用 {{ $value | humanizePercentage }} 用户配额"
+
+      # 租户请求量告警
+      - alert: TenantHighRequestRate
+        expr: sum(rate(http_server_requests_seconds_count{job=~"openidaas.*"}[5m])) by (tenant_id) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+          category: tenant
+        annotations:
+          summary: "租户 {{ $labels.tenant_id }} 请求量过高"
+          description: "租户 {{ $labels.tenant_id }} 请求量 {{ $value }}/秒"
+
+      # 租户错误率告警
+      - alert: TenantHighErrorRate
+        expr: sum(rate(http_server_requests_seconds_count{job=~"openidaas.*", status=~"5.."}[5m])) by (tenant_id) / sum(rate(http_server_requests_seconds_count{job=~"openidaas.*"}[5m])) by (tenant_id) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+          category: tenant
+        annotations:
+          summary: "租户 {{ $labels.tenant_id }} 错误率过高"
+          description: "租户 {{ $labels.tenant_id }} 5xx 错误率 {{ $value | humanizePercentage }}"
+
+  - name: openidaas_database
+    interval: 30s
+    rules:
+      # 数据库连接告警
+      - alert: DatabaseConnectionPoolExhausted
+        expr: hikaricp_connections_active{job=~"openidaas.*"} == hikaricp_connections_max{job=~"openidaas.*"}
+        for: 2m
+        labels:
+          severity: critical
+          service: openidaas
+          category: database
+        annotations:
+          summary: "数据库连接池已耗尽"
+          description: "实例 {{ $labels.instance }} 数据库连接池已耗尽，最大连接数：{{ $value }}"
+
+      # 数据库慢查询告警
+      - alert: DatabaseSlowQuery
+        expr: histogram_quantile(0.95, sum(rate(hikaricp_connections_latency_seconds_bucket{job=~"openidaas.*"}[5m])) by (le)) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+          category: database
+        annotations:
+          summary: "数据库查询响应时间过长"
+          description: "P95 查询响应时间 {{ $value }}s，超过 1 秒持续 5 分钟"
+
+      # 数据库死锁告警
+      - alert: DatabaseDeadlockDetected
+        expr: increase(database_deadlock_total{job=~"openidaas.*"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: openidaas
+          category: database
+        annotations:
+          summary: "检测到数据库死锁"
+          description: "检测到 {{ $value }} 次数据库死锁"
+
+      # 数据库连接超时告警
+      - alert: DatabaseConnectionTimeout
+        expr: rate(hikaricp_connections_timeout_total{job=~"openidaas.*"}[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: openidaas
+          category: database
+        annotations:
+          summary: "数据库连接超时频繁"
+          description: "数据库连接超时 {{ $value }}/秒"

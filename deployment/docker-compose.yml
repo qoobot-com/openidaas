@@ -1,0 +1,261 @@
+# ============================================================================
+# OpenIDaaS Development Docker Compose
+# ============================================================================
+version: '3.8'
+
+services:
+  # ============================================================================
+  # PostgreSQL Database
+  # ============================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: openidaas-postgres
+    environment:
+      POSTGRES_DB: openidaas
+      POSTGRES_USER: openidaas
+      POSTGRES_PASSWORD: openidaas123
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openidaas -d openidaas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - openidaas-network
+
+  # ============================================================================
+  # Redis Cache
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: openidaas-redis
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - openidaas-network
+
+  # ============================================================================
+  # OpenIDaaS Auth Service
+  # ============================================================================
+  auth:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: openidaas-auth
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_APPLICATION_NAME: openidaas-auth
+      DATABASE_URL: jdbc:postgresql://postgres:5432/openidaas
+      DATABASE_USERNAME: openidaas
+      DATABASE_PASSWORD: openidaas123
+      REDIS_URL: redis://redis:6379
+      OPENIDAAS_AUTH_JWT_SECRET: dev-secret-key-change-in-production
+      OPENIDAAS_AUTH_JWT_EXPIRATION: 3600
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - openidaas-network
+
+  # ============================================================================
+  # OpenIDaaS User Service
+  # ============================================================================
+  user:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: openidaas-user
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_APPLICATION_NAME: openidaas-user
+      DATABASE_URL: jdbc:postgresql://postgres:5432/openidaas
+      DATABASE_USERNAME: openidaas
+      DATABASE_PASSWORD: openidaas123
+      REDIS_URL: redis://redis:6379
+      OPENIDAAS_TENANT_ENABLED: "true"
+      OPENIDAAS_TENANT_ISOLATION_STRATEGY: SCHEMA
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - openidaas-network
+
+  # ============================================================================
+  # OpenIDaaS Gateway
+  # ============================================================================
+  gateway:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.gateway
+    container_name: openidaas-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_APPLICATION_NAME: openidaas-gateway
+      OPENIDAAS_AUTH_URL: http://auth:8080
+      OPENIDAAS_USER_URL: http://user:8080
+      OPENIDAAS_TENANT_URL: http://tenant:8080
+    depends_on:
+      - auth
+      - user
+      - tenant
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - openidaas-network
+
+  # ============================================================================
+  # OpenIDaaS Tenant Service
+  # ============================================================================
+  tenant:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: openidaas-tenant
+    ports:
+      - "8083:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_APPLICATION_NAME: openidaas-tenant
+      DATABASE_URL: jdbc:postgresql://postgres:5432/openidaas
+      DATABASE_USERNAME: openidaas
+      DATABASE_PASSWORD: openidaas123
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - openidaas-network
+
+  # ============================================================================
+  # Prometheus (Monitoring)
+  # ============================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: openidaas-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - openidaas-network
+
+  # ============================================================================
+  # Grafana (Visualization)
+  # ============================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: openidaas-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_INSTALL_PLUGINS: "grafana-piechart-panel"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - openidaas-network
+
+  # ============================================================================
+  # Adminer (Database Management)
+  # ============================================================================
+  adminer:
+    image: adminer:latest
+    container_name: openidaas-adminer
+    ports:
+      - "8084:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: nette
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - openidaas-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  openidaas-network:
+    driver: bridge

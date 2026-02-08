@@ -1,0 +1,6480 @@
+server:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+  port: 8080server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+spring:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+  application:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+    name: openidaas-gatewayserver:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+  cloud:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+    gateway:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+      discovery:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+        locator:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+          enabled: trueserver:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+          lower-case-service-id: trueserver:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+      routes:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+        - id: auth-serviceserver:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+          uri: lb://openidaas-authserver:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+          predicates:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+            - Path=/api/auth/**server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+          filters:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+            - StripPrefix=1server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+        - id: user-serviceserver:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+          uri: lb://openidaas-userserver:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+          predicates:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+            - Path=/api/users/**server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+          filters:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+            - StripPrefix=1server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+        - id: tenant-serviceserver:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+          uri: lb://openidaas-tenantserver:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+          predicates:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+            - Path=/api/tenants/**server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+          filters:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+            - StripPrefix=1server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+  data:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+    redis:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+      host: localhostserver:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+      port: 6379server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+logging:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+  level:server:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+    com.qoobot.openidaas: DEBUGserver:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30
+    org.springframework.cloud.gateway: DEBUGserver:
+  port: 8080
+
+spring:
+  application:
+    name: openidaas-gateway
+
+  cloud:
+    gateway:
+      # 路由配置
+      routes:
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 租户服务路由
+        - id: tenant-service
+          uri: lb://openidaas-tenant
+          predicates:
+            - Path=/api/tenants/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+        # 安全服务路由
+        - id: security-service
+          uri: lb://openidaas-security
+          predicates:
+            - Path=/api/security/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationGatewayFilter
+            - name: RateLimitGatewayFilter
+            - name: ApiLoggingFilter
+
+      # 全局CORS配置
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+      # 限流配置
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+          max-wait: 3000ms
+
+openidaas:
+  gateway:
+    user-service-uri: lb://openidaas-user
+    auth-service-uri: lb://openidaas-auth
+    tenant-service-uri: lb://openidaas-tenant
+    security-service-uri: lb://openidaas-security
+    internal-service-uri: lb://openidaas-internal
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 50
+      login-capacity: 10
+      login-refill-rate: 5
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/openidaas-gateway.log
+    max-size: 100MB
+    max-history: 30

@@ -1,0 +1,684 @@
+openidaas:server:
+  port: 8085
+
+spring:
+  application:
+    name: openidaas-security
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+
+openidaas:
+  security:
+    jwt:
+      secret: openidaas-secret-key-change-in-production
+      expiration-hours: 24
+      refresh-expiration-days: 7
+      issuer: openidaas
+
+    password:
+      min-length: 8
+      max-length: 128
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special-char: false
+      special-chars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+      expire-days: 90
+      history-count: 5
+      max-failed-attempts: 5
+      lock-minutes: 30
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 10
+      login-capacity: 5
+      login-refill-rate: 1
+      api-capacity: 100
+      api-refill-rate: 50
+
+    mfa:
+      enabled: true
+      code-length: 6
+      code-expire-seconds: 30
+      secret-size: 20
+      issuer: OpenIDaaS
+
+    audit:
+      enabled: true
+      log-sensitive: true
+      retention-days: 90
+      log-request-body: false
+      log-response-body: false
+
+    cors:
+      enabled: true
+      allowed-origins: "*"
+      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+      allowed-headers: "*"
+      allow-credentials: false
+      max-age: 3600
+
+logging:
+  level:
+    com.qoobot.openidaas.security: DEBUG
+    org.springframework.security: DEBUG
+  security:server:
+  port: 8085
+
+spring:
+  application:
+    name: openidaas-security
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+
+openidaas:
+  security:
+    jwt:
+      secret: openidaas-secret-key-change-in-production
+      expiration-hours: 24
+      refresh-expiration-days: 7
+      issuer: openidaas
+
+    password:
+      min-length: 8
+      max-length: 128
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special-char: false
+      special-chars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+      expire-days: 90
+      history-count: 5
+      max-failed-attempts: 5
+      lock-minutes: 30
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 10
+      login-capacity: 5
+      login-refill-rate: 1
+      api-capacity: 100
+      api-refill-rate: 50
+
+    mfa:
+      enabled: true
+      code-length: 6
+      code-expire-seconds: 30
+      secret-size: 20
+      issuer: OpenIDaaS
+
+    audit:
+      enabled: true
+      log-sensitive: true
+      retention-days: 90
+      log-request-body: false
+      log-response-body: false
+
+    cors:
+      enabled: true
+      allowed-origins: "*"
+      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+      allowed-headers: "*"
+      allow-credentials: false
+      max-age: 3600
+
+logging:
+  level:
+    com.qoobot.openidaas.security: DEBUG
+    org.springframework.security: DEBUG
+    password:server:
+  port: 8085
+
+spring:
+  application:
+    name: openidaas-security
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+
+openidaas:
+  security:
+    jwt:
+      secret: openidaas-secret-key-change-in-production
+      expiration-hours: 24
+      refresh-expiration-days: 7
+      issuer: openidaas
+
+    password:
+      min-length: 8
+      max-length: 128
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special-char: false
+      special-chars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+      expire-days: 90
+      history-count: 5
+      max-failed-attempts: 5
+      lock-minutes: 30
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 10
+      login-capacity: 5
+      login-refill-rate: 1
+      api-capacity: 100
+      api-refill-rate: 50
+
+    mfa:
+      enabled: true
+      code-length: 6
+      code-expire-seconds: 30
+      secret-size: 20
+      issuer: OpenIDaaS
+
+    audit:
+      enabled: true
+      log-sensitive: true
+      retention-days: 90
+      log-request-body: false
+      log-response-body: false
+
+    cors:
+      enabled: true
+      allowed-origins: "*"
+      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+      allowed-headers: "*"
+      allow-credentials: false
+      max-age: 3600
+
+logging:
+  level:
+    com.qoobot.openidaas.security: DEBUG
+    org.springframework.security: DEBUG
+      min-length: 8server:
+  port: 8085
+
+spring:
+  application:
+    name: openidaas-security
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+
+openidaas:
+  security:
+    jwt:
+      secret: openidaas-secret-key-change-in-production
+      expiration-hours: 24
+      refresh-expiration-days: 7
+      issuer: openidaas
+
+    password:
+      min-length: 8
+      max-length: 128
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special-char: false
+      special-chars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+      expire-days: 90
+      history-count: 5
+      max-failed-attempts: 5
+      lock-minutes: 30
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 10
+      login-capacity: 5
+      login-refill-rate: 1
+      api-capacity: 100
+      api-refill-rate: 50
+
+    mfa:
+      enabled: true
+      code-length: 6
+      code-expire-seconds: 30
+      secret-size: 20
+      issuer: OpenIDaaS
+
+    audit:
+      enabled: true
+      log-sensitive: true
+      retention-days: 90
+      log-request-body: false
+      log-response-body: false
+
+    cors:
+      enabled: true
+      allowed-origins: "*"
+      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+      allowed-headers: "*"
+      allow-credentials: false
+      max-age: 3600
+
+logging:
+  level:
+    com.qoobot.openidaas.security: DEBUG
+    org.springframework.security: DEBUG
+      max-length: 128server:
+  port: 8085
+
+spring:
+  application:
+    name: openidaas-security
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+
+openidaas:
+  security:
+    jwt:
+      secret: openidaas-secret-key-change-in-production
+      expiration-hours: 24
+      refresh-expiration-days: 7
+      issuer: openidaas
+
+    password:
+      min-length: 8
+      max-length: 128
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special-char: false
+      special-chars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+      expire-days: 90
+      history-count: 5
+      max-failed-attempts: 5
+      lock-minutes: 30
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 10
+      login-capacity: 5
+      login-refill-rate: 1
+      api-capacity: 100
+      api-refill-rate: 50
+
+    mfa:
+      enabled: true
+      code-length: 6
+      code-expire-seconds: 30
+      secret-size: 20
+      issuer: OpenIDaaS
+
+    audit:
+      enabled: true
+      log-sensitive: true
+      retention-days: 90
+      log-request-body: false
+      log-response-body: false
+
+    cors:
+      enabled: true
+      allowed-origins: "*"
+      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+      allowed-headers: "*"
+      allow-credentials: false
+      max-age: 3600
+
+logging:
+  level:
+    com.qoobot.openidaas.security: DEBUG
+    org.springframework.security: DEBUG
+      strength: STRONGserver:
+  port: 8085
+
+spring:
+  application:
+    name: openidaas-security
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+
+openidaas:
+  security:
+    jwt:
+      secret: openidaas-secret-key-change-in-production
+      expiration-hours: 24
+      refresh-expiration-days: 7
+      issuer: openidaas
+
+    password:
+      min-length: 8
+      max-length: 128
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special-char: false
+      special-chars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+      expire-days: 90
+      history-count: 5
+      max-failed-attempts: 5
+      lock-minutes: 30
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 10
+      login-capacity: 5
+      login-refill-rate: 1
+      api-capacity: 100
+      api-refill-rate: 50
+
+    mfa:
+      enabled: true
+      code-length: 6
+      code-expire-seconds: 30
+      secret-size: 20
+      issuer: OpenIDaaS
+
+    audit:
+      enabled: true
+      log-sensitive: true
+      retention-days: 90
+      log-request-body: false
+      log-response-body: false
+
+    cors:
+      enabled: true
+      allowed-origins: "*"
+      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+      allowed-headers: "*"
+      allow-credentials: false
+      max-age: 3600
+
+logging:
+  level:
+    com.qoobot.openidaas.security: DEBUG
+    org.springframework.security: DEBUG
+    jwt:server:
+  port: 8085
+
+spring:
+  application:
+    name: openidaas-security
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+
+openidaas:
+  security:
+    jwt:
+      secret: openidaas-secret-key-change-in-production
+      expiration-hours: 24
+      refresh-expiration-days: 7
+      issuer: openidaas
+
+    password:
+      min-length: 8
+      max-length: 128
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special-char: false
+      special-chars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+      expire-days: 90
+      history-count: 5
+      max-failed-attempts: 5
+      lock-minutes: 30
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 10
+      login-capacity: 5
+      login-refill-rate: 1
+      api-capacity: 100
+      api-refill-rate: 50
+
+    mfa:
+      enabled: true
+      code-length: 6
+      code-expire-seconds: 30
+      secret-size: 20
+      issuer: OpenIDaaS
+
+    audit:
+      enabled: true
+      log-sensitive: true
+      retention-days: 90
+      log-request-body: false
+      log-response-body: false
+
+    cors:
+      enabled: true
+      allowed-origins: "*"
+      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+      allowed-headers: "*"
+      allow-credentials: false
+      max-age: 3600
+
+logging:
+  level:
+    com.qoobot.openidaas.security: DEBUG
+    org.springframework.security: DEBUG
+      secret: openidaas-jwt-secret-key-2024-qoobotserver:
+  port: 8085
+
+spring:
+  application:
+    name: openidaas-security
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+
+openidaas:
+  security:
+    jwt:
+      secret: openidaas-secret-key-change-in-production
+      expiration-hours: 24
+      refresh-expiration-days: 7
+      issuer: openidaas
+
+    password:
+      min-length: 8
+      max-length: 128
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special-char: false
+      special-chars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+      expire-days: 90
+      history-count: 5
+      max-failed-attempts: 5
+      lock-minutes: 30
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 10
+      login-capacity: 5
+      login-refill-rate: 1
+      api-capacity: 100
+      api-refill-rate: 50
+
+    mfa:
+      enabled: true
+      code-length: 6
+      code-expire-seconds: 30
+      secret-size: 20
+      issuer: OpenIDaaS
+
+    audit:
+      enabled: true
+      log-sensitive: true
+      retention-days: 90
+      log-request-body: false
+      log-response-body: false
+
+    cors:
+      enabled: true
+      allowed-origins: "*"
+      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+      allowed-headers: "*"
+      allow-credentials: false
+      max-age: 3600
+
+logging:
+  level:
+    com.qoobot.openidaas.security: DEBUG
+    org.springframework.security: DEBUG
+      expiration: 86400000server:
+  port: 8085
+
+spring:
+  application:
+    name: openidaas-security
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+
+openidaas:
+  security:
+    jwt:
+      secret: openidaas-secret-key-change-in-production
+      expiration-hours: 24
+      refresh-expiration-days: 7
+      issuer: openidaas
+
+    password:
+      min-length: 8
+      max-length: 128
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special-char: false
+      special-chars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+      expire-days: 90
+      history-count: 5
+      max-failed-attempts: 5
+      lock-minutes: 30
+
+    rate-limit:
+      enabled: true
+      default-capacity: 100
+      default-refill-rate: 10
+      login-capacity: 5
+      login-refill-rate: 1
+      api-capacity: 100
+      api-refill-rate: 50
+
+    mfa:
+      enabled: true
+      code-length: 6
+      code-expire-seconds: 30
+      secret-size: 20
+      issuer: OpenIDaaS
+
+    audit:
+      enabled: true
+      log-sensitive: true
+      retention-days: 90
+      log-request-body: false
+      log-response-body: false
+
+    cors:
+      enabled: true
+      allowed-origins: "*"
+      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+      allowed-headers: "*"
+      allow-credentials: false
+      max-age: 3600
+
+logging:
+  level:
+    com.qoobot.openidaas.security: DEBUG
+    org.springframework.security: DEBUG

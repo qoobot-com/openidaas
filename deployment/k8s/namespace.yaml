@@ -1,0 +1,10 @@
+# ============================================================================
+# Kubernetes Namespace
+# ============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openidaas
+  labels:
+    name: openidaas
+    app: openidaas
