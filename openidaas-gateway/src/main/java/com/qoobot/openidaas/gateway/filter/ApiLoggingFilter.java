@@ -53,7 +53,7 @@ public class ApiLoggingFilter extends AbstractGatewayFilterFactory<Object> {
 
                         log.info("[{}] {} {} - {} {} in {}ms", 
                                 requestId, method, uri, statusCode, 
-                                response.getStatusCode() != null ? response.getStatusCode().getReasonPhrase() : "",
+                                getStatusCodeDescription(statusCode),
                                 duration.toMillis());
                     });
         };
@@ -72,5 +72,26 @@ public class ApiLoggingFilter extends AbstractGatewayFilterFactory<Object> {
                     request.getRemoteAddress().getAddress().getHostAddress() : "unknown";
         }
         return ip;
+    }
+    
+    /**
+     * 获取状态码描述
+     */
+    private String getStatusCodeDescription(int statusCode) {
+        switch (statusCode) {
+            case 200: return "OK";
+            case 201: return "Created";
+            case 204: return "No Content";
+            case 400: return "Bad Request";
+            case 401: return "Unauthorized";
+            case 403: return "Forbidden";
+            case 404: return "Not Found";
+            case 429: return "Too Many Requests";
+            case 500: return "Internal Server Error";
+            case 502: return "Bad Gateway";
+            case 503: return "Service Unavailable";
+            case 504: return "Gateway Timeout";
+            default: return "Unknown Status";
+        }
     }
 }

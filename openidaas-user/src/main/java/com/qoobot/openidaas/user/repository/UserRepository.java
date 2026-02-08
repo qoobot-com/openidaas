@@ -159,4 +159,16 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
      */
     @Query("SELECT u FROM User u WHERE u.lastLoginAt IS NULL OR u.lastLoginAt < :before")
     List<User> findInactiveUsers(@Param("before") java.time.LocalDateTime before);
+    
+    /**
+     * 检查部门是否有用户
+     */
+    boolean existsByDepartmentId(Long departmentId);
+    
+    /**
+     * 检查部门或其子部门是否有用户
+     */
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.departmentId = :deptId OR u.departmentId IN " +
+           "(SELECT d.id FROM Department d WHERE d.parentId = :deptId)")
+    boolean hasUsers(@Param("deptId") Long deptId);
 }

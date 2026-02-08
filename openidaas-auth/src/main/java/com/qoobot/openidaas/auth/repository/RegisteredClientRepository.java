@@ -21,4 +21,9 @@ public interface RegisteredClientRepository extends JpaRepository<RegisteredClie
      * 根据客户端 ID 查找
      */
     Optional<RegisteredClientEntity> findByClientId(String clientId);
+    
+    /**
+     * 根据客户端 ID 删除
+     */
+    void deleteByClientId(String clientId);
 }

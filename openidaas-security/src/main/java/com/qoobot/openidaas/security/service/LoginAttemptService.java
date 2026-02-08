@@ -1,6 +1,7 @@
 package com.qoobot.openidaas.security.service;
 
 import com.qoobot.openidaas.security.config.SecurityProperties;
+import com.qoobot.openidaas.security.constants.SecurityConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;

@@ -1,6 +1,6 @@
 package com.qoobot.openidaas.user.service;
 
-import com.qoobot.openidaas.user.dto.RoleDTO;
+import com.qoobot.openidaas.user.dto.*;
 import com.qoobot.openidaas.user.entity.*;
 import com.qoobot.openidaas.user.exception.*;
 import com.qoobot.openidaas.user.mapper.UserMapper;

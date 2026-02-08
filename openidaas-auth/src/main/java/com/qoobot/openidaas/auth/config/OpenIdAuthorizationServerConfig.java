@@ -3,12 +3,13 @@ package com.qoobot.openidaas.auth.config;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.qoobot.openidaas.auth.service.OAuth2ClientService;
 import com.qoobot.openidaas.auth.service.RegisteredClientRepositoryService;
 import com.qoobot.openidaas.auth.service.TokenRevocationService;
-import com.qoobot.openidaas.auth.service.UserDetailsService;
+import com.qoobot.openidaas.auth.service.OidcUserInfoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +19,6 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.core.OAuth2TokenIntrospectionClaimNames;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -53,7 +53,7 @@ public class OpenIdAuthorizationServerConfig {
 
     private final PasswordEncoder passwordEncoder;
     private final OAuth2ClientService oAuth2ClientService;
-    private final UserDetailsService userDetailsService;
+    private final OidcUserInfoService oidcUserInfoService;
     private final TokenRevocationService tokenRevocationService;
 
     /**
@@ -73,8 +73,7 @@ public class OpenIdAuthorizationServerConfig {
                         clientAuthentication.errorResponseHandler(
                                 new CustomClientAuthenticationErrorResponseHandler()))
                 .authorizationEndpoint(authorizationEndpoint ->
-                        authorizationEndpoint.consentPage("/oauth2/consent"))
-                .oidcProviderConfigurationEndpoint(Customizer.withDefaults());
+                        authorizationEndpoint.consentPage("/oauth2/consent"));
 
         http
                 // 匹配授权服务器的端点
@@ -128,7 +127,7 @@ public class OpenIdAuthorizationServerConfig {
                 .issuer("http://localhost:8081")
                 .authorizationEndpoint("/oauth2/authorize")
                 .tokenEndpoint("/oauth2/token")
-                .jwkSetUri("/.well-known/jwks.json")
+                .jwkSetEndpoint("/.well-known/jwks.json")
                 .oidcUserInfoEndpoint("/userinfo")
                 .oidcClientRegistrationEndpoint("/connect/register")
                 .build();
@@ -157,12 +156,12 @@ public class OpenIdAuthorizationServerConfig {
                 
                 // 添加用户详情（ID Token）
                 if (context.getTokenType().getValue().equals("id_token")) {
-                    OidcUserInfo userInfo = userDetailsService.loadUser(
+                    OidcUserInfo userInfo = oidcUserInfoService.loadUser(
                             context.getPrincipal().getName());
                     context.getClaims()
-                            .claim(OAuth2TokenIntrospectionClaimNames.EMAIL, userInfo.getEmail())
-                            .claim(OAuth2TokenIntrospectionClaimNames.PICTURE, userInfo.getPicture())
-                            .claim(OAuth2TokenIntrospectionClaimNames.PREFERRED_USERNAME, 
+                            .claim("email", userInfo.getEmail())
+                            .claim("picture", userInfo.getPicture())
+                            .claim("preferred_username", 
                                     userInfo.getPreferredUsername());
                 }
             }
@@ -174,13 +173,10 @@ public class OpenIdAuthorizationServerConfig {
      */
     private RSAKey generateRsaKey() {
         try {
-            RSAKey key = RSAKey.generateKey(2048);
-            return new RSAKey.Builder(key.toRSAPublicKey())
-                    .privateKey(key.toRSAPrivateKey())
+            RSAKey rsaKey = new RSAKeyGenerator(2048)
                     .keyID(UUID.randomUUID().toString())
-                    .keyUse(com.nimbusds.jose.JWKUse.SIG)
-                    .algorithm(org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey.SIGNATURE_ALGORITHM)
-                    .build();
+                    .generate();
+            return rsaKey;
         } catch (Exception e) {
             throw new IllegalStateException("Failed to generate RSA key", e);
         }

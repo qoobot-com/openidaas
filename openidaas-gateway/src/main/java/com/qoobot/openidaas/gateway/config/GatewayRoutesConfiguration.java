@@ -4,6 +4,9 @@ import com.qoobot.openidaas.gateway.filter.AuthenticationGatewayFilter;
 import com.qoobot.openidaas.gateway.filter.RateLimitGatewayFilter;
 import com.qoobot.openidaas.gateway.filter.ApiLoggingFilter;
 import com.qoobot.openidaas.gateway.property.GatewayProperties;
+import com.qoobot.openidaas.gateway.service.JwtTokenService;
+import com.qoobot.openidaas.gateway.service.RateLimitService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
@@ -26,12 +29,20 @@ import java.time.Duration;
 public class GatewayRoutesConfiguration {
 
     private final GatewayProperties gatewayProperties;
+    private final JwtTokenService jwtTokenService;
+    private final RateLimitService rateLimitService;
+    private final ObjectMapper objectMapper;
+    private final ApiLoggingFilter apiLoggingFilter;
 
     /**
      * 路由定位器
      */
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
+        // 创建带参数的过滤器实例
+        AuthenticationGatewayFilter authFilter = new AuthenticationGatewayFilter(jwtTokenService, objectMapper);
+        RateLimitGatewayFilter rateLimitFilter = new RateLimitGatewayFilter(rateLimitService, objectMapper);
+        
         return builder.routes()
                 // 用户服务路由
                 .route("user-service", r -> r
@@ -39,9 +50,9 @@ public class GatewayRoutesConfiguration {
                         .and()
                         .method(HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE)
                         .filters(f -> f
-                                .filter(new AuthenticationGatewayFilter())
-                                .filter(new RateLimitGatewayFilter())
-                                .filter(new ApiLoggingFilter())
+                                .filter(authFilter.apply(null))
+                                .filter(rateLimitFilter.apply(null))
+                                .filter(apiLoggingFilter.apply(null))
                                 .stripPrefix(1)
                                 .circuitBreaker(c -> c
                                         .setName("user-service-cb")
@@ -52,8 +63,8 @@ public class GatewayRoutesConfiguration {
                 .route("auth-service", r -> r
                         .path("/api/auth/**")
                         .filters(f -> f
-                                .filter(new RateLimitGatewayFilter())
-                                .filter(new ApiLoggingFilter())
+                                .filter(rateLimitFilter.apply(null))
+                                .filter(apiLoggingFilter.apply(null))
                                 .stripPrefix(1)
                                 .retry(retryConfig -> retryConfig
                                         .setRetries(3)
@@ -66,9 +77,9 @@ public class GatewayRoutesConfiguration {
                         .and()
                         .method(HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE)
                         .filters(f -> f
-                                .filter(new AuthenticationGatewayFilter())
-                                .filter(new RateLimitGatewayFilter())
-                                .filter(new ApiLoggingFilter())
+                                .filter(authFilter.apply(null))
+                                .filter(rateLimitFilter.apply(null))
+                                .filter(apiLoggingFilter.apply(null))
                                 .stripPrefix(1)
                                 .circuitBreaker(c -> c
                                         .setName("tenant-service-cb")
@@ -81,9 +92,9 @@ public class GatewayRoutesConfiguration {
                         .and()
                         .method(HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE)
                         .filters(f -> f
-                                .filter(new AuthenticationGatewayFilter())
-                                .filter(new RateLimitGatewayFilter())
-                                .filter(new ApiLoggingFilter())
+                                .filter(authFilter.apply(null))
+                                .filter(rateLimitFilter.apply(null))
+                                .filter(apiLoggingFilter.apply(null))
                                 .stripPrefix(1)
                                 .circuitBreaker(c -> c
                                         .setName("security-service-cb")
@@ -94,8 +105,8 @@ public class GatewayRoutesConfiguration {
                 .route("internal-service", r -> r
                         .path("/internal/**")
                         .filters(f -> f
-                                .filter(new RateLimitGatewayFilter())
-                                .filter(new ApiLoggingFilter())
+                                .filter(rateLimitFilter.apply(null))
+                                .filter(apiLoggingFilter.apply(null))
                                 .stripPrefix(1))
                         .uri(gatewayProperties.getInternalServiceUri()))
 

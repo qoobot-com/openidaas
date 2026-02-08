@@ -1,11 +1,13 @@
 package com.qoobot.openidaas.user.service;
 
 import com.alibaba.excel.EasyExcel;
-import com.alibaba.excel.write.metadata.WriteSheet;
 import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
 import com.qoobot.openidaas.user.dto.CreateUserRequest;
 import com.qoobot.openidaas.user.dto.UserDTO;
-import com.qoobot.openidaas.user.entity.User;
+import com.qoobot.openidaas.user.model.BatchImportResult;
+import com.qoobot.openidaas.user.model.UserExportModel;
+import com.qoobot.openidaas.user.model.UserImportModel;
+import com.qoobot.openidaas.user.model.UserImportResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -89,8 +91,8 @@ public class UserImportExportService {
         }
 
         log.info("Import completed: {} success, {} failed", 
-                results.stream().filter(UserImportResult::isSuccess).count(),
-                results.stream().filter(r -> !r.isSuccess()).count());
+                results.stream().filter(UserImportResult::getSuccess).count(),
+                results.stream().filter(r -> !r.getSuccess()).count());
 
         return results;
     }

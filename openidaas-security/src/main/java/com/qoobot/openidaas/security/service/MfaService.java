@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * MFA（多因子认证）服务
@@ -67,7 +68,7 @@ public class MfaService {
      * @throws WriterException 写入异常
      * @throws IOException IO异常
      */
-    public byte[] generateQrCodeImage(String qrCodeUrl, int width, height) 
+    public byte[] generateQrCodeImage(String qrCodeUrl, int width, int height)
             throws WriterException, IOException {
 
         BitMatrix bitMatrix = new MultiFormatWriter().encode(

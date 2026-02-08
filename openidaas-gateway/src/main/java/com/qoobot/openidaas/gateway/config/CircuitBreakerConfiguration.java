@@ -3,6 +3,7 @@ package com.qoobot.openidaas.gateway.config;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
 import org.springframework.context.annotation.Bean;
@@ -43,8 +44,8 @@ public class CircuitBreakerConfiguration {
 
         CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(circuitBreakerConfig);
 
-        ReactiveResilience4JCircuitBreakerFactory factory = new ReactiveResilience4JCircuitBreakerFactory();
-        factory.configureCircuitBreakerRegistry(registry);
+        ReactiveResilience4JCircuitBreakerFactory factory = 
+                new ReactiveResilience4JCircuitBreakerFactory(registry, TimeLimiterRegistry.ofDefaults());
 
         // 为不同服务配置不同的熔断器
         factory.configure(builder -> builder

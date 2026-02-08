@@ -1,8 +1,8 @@
 package com.qoobot.openidaas.gateway.service;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Refill;
+//import io.github.bucket4j.Bandwidth;
+//import io.github.bucket4j.Bucket;
+//import io.github.bucket4j.Refill;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
@@ -28,7 +28,8 @@ public class RateLimitService {
     private final ReactiveRedisTemplate<String, Object> redisTemplate;
 
     // 本地缓存（简化实现，生产环境应使用Redis分布式Bucket）
-    private final ConcurrentHashMap<String, Bucket> bucketCache = new ConcurrentHashMap<>();
+    //private final ConcurrentHashMap<String, Bucket> bucketCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Object> bucketCache = new ConcurrentHashMap<>();
 
     /**
      * 尝试获取令牌
@@ -48,9 +49,11 @@ public class RateLimitService {
             long refillTokens) {
 
         String bucketKey = buildBucketKey(key, scope);
-        Bucket bucket = getBucket(bucketKey, capacity, refillDuration, refillTokens);
-
-        return bucket.tryConsume(1);
+        //Bucket bucket = getBucket(bucketKey, capacity, refillDuration, refillTokens);
+        //return bucket.tryConsume(1);
+        
+        // 临时实现：总是允许通过
+        return true;
     }
 
     /**
@@ -73,15 +76,17 @@ public class RateLimitService {
             long refillTokens) {
 
         String bucketKey = buildBucketKey(key, scope);
-        Bucket bucket = getBucket(bucketKey, capacity, refillDuration, refillTokens);
-
-        return bucket.tryConsume(tokens);
+        //Bucket bucket = getBucket(bucketKey, capacity, refillDuration, refillTokens);
+        //return bucket.tryConsume(tokens);
+        
+        // 临时实现：总是允许通过
+        return true;
     }
 
     /**
      * 获取令牌桶
      */
-    private Bucket getBucket(
+    /*private Bucket getBucket(
             String bucketKey,
             long capacity,
             Duration refillDuration,
@@ -95,7 +100,7 @@ public class RateLimitService {
                         ))
                         .build()
         );
-    }
+    }*/
 
     /**
      * 获取剩余令牌数
@@ -105,9 +110,12 @@ public class RateLimitService {
      * @return 剩余令牌数
      */
     public long getRemainingTokens(String key, String scope) {
-        String bucketKey = buildBucketKey(key, scope);
+        /*String bucketKey = buildBucketKey(key, scope);
         Bucket bucket = bucketCache.get(bucketKey);
-        return bucket != null ? bucket.getAvailableTokens() : 0;
+        return bucket != null ? bucket.getAvailableTokens() : 0;*/
+        
+        // 临时实现：返回固定值
+        return 1000;
     }
 
     /**

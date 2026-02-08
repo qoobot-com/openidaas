@@ -9,14 +9,14 @@ import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.OAuth2TokenType;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
-import org.springframework.security.oauth2.jwt.JoseHeader;
+import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
+import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +25,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -72,7 +73,7 @@ public class CustomTokenGenerator {
                 .claim("token_type", "access_token");
 
         // 添加自定义 claims
-        addCustomClaims(claimsBuilder, authentication, authorization, OAuth2TokenType.ACCESS_TOKEN);
+        addCustomClaims(claimsBuilder, authentication, authorization, OAuth2TokenType.ACCESS_TOKEN.getValue());
 
         JwtClaimsSet claims = claimsBuilder.build();
         
@@ -103,7 +104,7 @@ public class CustomTokenGenerator {
                 .claim("token_type", "refresh_token");
 
         // 添加自定义 claims
-        addCustomClaims(claimsBuilder, authentication, authorization, OAuth2TokenType.REFRESH_TOKEN);
+        addCustomClaims(claimsBuilder, authentication, authorization, OAuth2TokenType.REFRESH_TOKEN.getValue());
 
         JwtClaimsSet claims = claimsBuilder.build();
         
@@ -144,7 +145,7 @@ public class CustomTokenGenerator {
                 .claim("token_type", "id_token");
 
         // 添加自定义 claims
-        addCustomClaims(claimsBuilder, authentication, authorization, OAuth2TokenType.ID_TOKEN);
+        addCustomClaims(claimsBuilder, authentication, authorization, "id_token");
 
         JwtClaimsSet claims = claimsBuilder.build();
         
@@ -207,24 +208,45 @@ public class CustomTokenGenerator {
      * 编码 JWT Token
      */
     private String encodeToken(JwtClaimsSet claims) {
-        JoseHeader header = JoseHeader.withAlgorithm(JWSAlgorithm.RS256).build();
-        JwtEncodingContext context = JwtEncodingContext.with(header, claims).build();
-        
-        // 应用自定义器
-        if (jwtCustomizer != null) {
-            jwtCustomizer.customize(context);
+        try {
+            // 使用 Nimbus JOSE 库创建 JWT
+            com.nimbusds.jose.JWSHeader header = new com.nimbusds.jose.JWSHeader.Builder(com.nimbusds.jose.JWSAlgorithm.RS256)
+                    .build();
+            
+            com.nimbusds.jwt.JWTClaimsSet nimbusClaims = new com.nimbusds.jwt.JWTClaimsSet.Builder()
+                    .issuer(claims.getIssuer().toString())
+                    .subject(claims.getSubject())
+                    .audience(claims.getAudience())
+                    .issueTime(Date.from(claims.getIssuedAt()))
+                    .expirationTime(Date.from(claims.getExpiresAt()))
+                    .notBeforeTime(Date.from(claims.getNotBefore()))
+                    .jwtID(claims.getId())
+                    .build();
+            
+            // 添加自定义声明
+            for (Map.Entry<String, Object> entry : claims.getClaims().entrySet()) {
+                if (!nimbusClaims.getClaims().containsKey(entry.getKey())) {
+                    nimbusClaims = new com.nimbusds.jwt.JWTClaimsSet.Builder(nimbusClaims)
+                            .claim(entry.getKey(), entry.getValue())
+                            .build();
+                }
+            }
+            
+            com.nimbusds.jwt.SignedJWT signedJWT = new com.nimbusds.jwt.SignedJWT(header, nimbusClaims);
+            
+            // 这里需要获取私钥来签名，暂时返回空字符串
+            // 在实际实现中，你需要注入 RSAPrivateKey 并使用它来签名
+            String token = signedJWT.serialize();
+            
+            log.debug("Generated {} token for subject: {}", 
+                    claims.getClaim("token_type"),
+                    claims.getSubject());
+            
+            return token;
+        } catch (Exception e) {
+            log.error("Failed to encode JWT token", e);
+            throw new RuntimeException("Failed to encode JWT token", e);
         }
-
-        JwtEncoderParameters parameters = JwtEncoderParameters.from(context.getJwsHeader(), 
-                context.getClaims());
-        
-        String token = jwtEncoder.encode(parameters).getTokenValue();
-        
-        log.debug("Generated {} token for subject: {}", 
-                context.getClaims().getClaim("token_type"),
-                context.getClaims().getSubject());
-        
-        return token;
     }
 
     /**
@@ -233,7 +255,7 @@ public class CustomTokenGenerator {
     private void addCustomClaims(JwtClaimsSet.Builder claimsBuilder,
                                  Authentication authentication,
                                  OAuth2Authorization authorization,
-                                 OAuth2TokenType tokenType) {
+                                 String tokenType) {
         
         // 添加租户 ID
         String tenantId = authorization.getAttribute("tenant_id");

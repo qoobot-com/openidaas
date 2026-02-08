@@ -1,7 +1,7 @@
 package com.qoobot.openidaas.auth.service;
 
+import com.qoobot.openidaas.auth.repository.AuthTokenRepository;
 import com.qoobot.openidaas.core.entity.AuthToken;
-import com.qoobot.openidaas.core.repository.AuthTokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;

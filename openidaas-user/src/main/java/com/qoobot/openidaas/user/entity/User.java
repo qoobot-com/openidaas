@@ -25,8 +25,7 @@ import java.util.Set;
     @Index(name = "idx_phone", columnList = "phone"),
     @Index(name = "idx_tenant_id", columnList = "tenantId"),
     @Index(name = "idx_department_id", columnList = "departmentId"),
-    @Index(name = "idx_status", columnList = "status"),
-    @Index(name = "idx_fulltext", columnList = "fullname", columnDefinition = "gin")
+    @Index(name = "idx_status", columnList = "status")
 })
 @SQLDelete(sql = "UPDATE users SET deleted = true, deletedAt = CURRENT_TIMESTAMP WHERE id = ?")
 @Where(clause = "deleted = false")

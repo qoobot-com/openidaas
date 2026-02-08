@@ -4,6 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
          https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <!-- 继承 Spring Boot Parent -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.10</version>
+        <relativePath/>
+    </parent>
+
+
 
     <!-- 基本信息 -->
     <groupId>com.qoobot</groupId>
@@ -11,8 +20,8 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>OpenIDaaS Enterprise Identity Authentication System</name>
-    <description>Enterprise Identity as a Service based on Spring Boot 4.0.2 + JDK 25</description>
+    <name>OpenIDaaS</name>
+    <description>OpenIDaaS Enterprise Identity Authentication System</description>
     <url>https://github.com/qoobot/openidaas</url>
 
     <!-- 模块声明 -->
@@ -34,10 +43,10 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Java 版本配置 -->
-        <java.version>25</java.version>
-        <maven.compiler.source>25</maven.compiler.source>
-        <maven.compiler.target>25</maven.compiler.target>
-        <maven.compiler.release>25</maven.compiler.release>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
 
         <!-- 启用虚拟线程 -->
         <maven.compiler.enablePreview>false</maven.compiler.enablePreview>
@@ -48,38 +57,43 @@
         <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
 
         <!-- Spring Boot 版本 -->
-        <spring-boot.version>4.0.2</spring-boot.version>
+        <spring-boot.version>3.5.10</spring-boot.version>
 
         <!-- Spring 相关版本 -->
-        <spring-cloud.version>2023.0.0</spring-cloud.version>
+        <spring-cloud.version>2023.0.4</spring-cloud.version>
+        <spring-authorization-server.version>1.3.0</spring-authorization-server.version>
 
         <!-- 数据库驱动 -->
         <postgresql.version>42.6.0</postgresql.version>
-        <hikaricp.version>5.0.1</hikaricp.version>
+        <hikaricp.version>6.3.3</hikaricp.version>
 
         <!-- 缓存 -->
         <redisson.version>3.24.3</redisson.version>
 
         <!-- 安全加密 -->
         <bcrypt.version>0.4</bcrypt.version>
-        <bouncycastle.version>1.77</bouncycastle.version>
+        <bouncycastle.version>1.78</bouncycastle.version>
         <nimbus-jose-jwt.version>10.4</nimbus-jose-jwt.version>
+        <argon2.version>2.11</argon2.version>
 
         <!-- JSON 处理 -->
         <jackson.version>2.16.0</jackson.version>
+        <fastjson2.version>2.0.60</fastjson2.version>
 
         <!-- 工具库 -->
         <hutool.version>5.8.23</hutool.version>
         <commons-lang3.version>3.14.0</commons-lang3.version>
         <commons-io.version>2.15.0</commons-io.version>
         <commons-collections4.version>4.4</commons-collections4.version>
+        <fastjson2.version>2.0.43</fastjson2.version>
+        <lombok.version>1.18.42</lombok.version>
 
         <!-- 日志 -->
-        <logback.version>1.4.14</logback.version>
-        <slf4j.version>2.0.9</slf4j.version>
+        <logback.version>1.5.25</logback.version>
+        <slf4j.version>2.0.17</slf4j.version>
 
         <!-- 验证 -->
-        <hibernate-validator.version>8.0.1.Final</hibernate-validator.version>
+        <hibernate-validator.version>8.0.3.Final</hibernate-validator.version>
 
         <!-- 测试 -->
         <junit.version>5.10.1</junit.version>
@@ -88,7 +102,7 @@
 
         <!-- 插件版本 -->
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
-        <spring-boot-maven-plugin.version>4.0.2</spring-boot-maven-plugin.version>
+        <spring-boot-maven-plugin.version>3.5.10</spring-boot-maven-plugin.version>
         <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
         <dockerfile-maven-plugin.version>1.4.13</dockerfile-maven-plugin.version>
@@ -97,6 +111,8 @@
         <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
         <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
     </properties>
+
+
 
     <!-- 依赖管理 -->
     <dependencyManagement>
@@ -123,9 +139,9 @@
             <dependency>
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-oauth2-authorization-server</artifactId>
-                <version>1.3.0</version>
+                <version>${spring-authorization-server.version}</version>
             </dependency>
-
+            
             <!-- 数据库驱动 -->
             <dependency>
                 <groupId>org.postgresql</groupId>
@@ -137,6 +153,12 @@
             <dependency>
                 <groupId>org.redisson</groupId>
                 <artifactId>redisson</artifactId>
+                <version>${redisson.version}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson-spring-boot-starter</artifactId>
                 <version>${redisson.version}</version>
             </dependency>
 
@@ -152,6 +174,12 @@
                 <artifactId>bcprov-jdk18on</artifactId>
                 <version>${bouncycastle.version}</version>
             </dependency>
+            
+            <dependency>
+                <groupId>de.mkammerer</groupId>
+                <artifactId>argon2-jvm</artifactId>
+                <version>${argon2.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.nimbusds</groupId>
@@ -165,6 +193,12 @@
             <dependency>
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-crypto</artifactId>
                 <version>${hutool.version}</version>
             </dependency>
 
@@ -185,9 +219,40 @@
                 <artifactId>commons-collections4</artifactId>
                 <version>${commons-collections4.version}</version>
             </dependency>
+            <!-- Lombok使用项目自带版本，不在此处声明 -->
 
+            <!-- fastjson2 -->
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2.version}</version>
+            </dependency>
+
+            <!-- 日志 -->
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jul-to-slf4j</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            
             <!-- 验证 -->
-            <!-- 版本由 Spring Boot BOM 管理 -->
+            <dependency>
+                <groupId>org.hibernate.validator</groupId>
+                <artifactId>hibernate-validator</artifactId>
+                <version>${hibernate-validator.version}</version>
+            </dependency>
 
             <!-- 测试 -->
             <dependency>
@@ -274,10 +339,11 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Lombok -->
+        <!-- Lombok - 使用项目自带版本 -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -305,7 +371,15 @@
                         <encoding>${project.build.sourceEncoding}</encoding>
                         <compilerArgs>
                             <arg>-parameters</arg>
+                            <arg>-XDignore.symbol.file</arg>
                         </compilerArgs>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
                     </configuration>
                 </plugin>
 
@@ -491,8 +565,8 @@
                                         <message>Maven 3.9.0 or higher is required</message>
                                     </requireMavenVersion>
                                     <requireJavaVersion>
-                                        <version>[25,)</version>
-                                        <message>JDK 25 or higher is required</message>
+                                        <version>[21,)</version>
+                                        <message>JDK 21 or higher is required</message>
                                     </requireJavaVersion>
                                     <banDuplicatePomDependencyVersions />
                                     <requireUpperBoundDeps />

@@ -258,8 +258,17 @@ public class MfaAuthenticationProvider implements AuthenticationProvider {
      * 生成验证码（用于确认 secret）
      */
     private int generateVerificationCode(String secret) {
-        return googleAuthenticator.calculateCode(secret, 
-                System.currentTimeMillis() / 30000);
+        // 使用反射调用私有方法
+        try {
+            java.lang.reflect.Method method = GoogleAuthenticator.class.getDeclaredMethod(
+                "calculateCode", byte[].class, long.class);
+            method.setAccessible(true);
+            return (int) method.invoke(googleAuthenticator, Base64.getDecoder().decode(secret), 
+                    System.currentTimeMillis() / 30000);
+        } catch (Exception e) {
+            log.error("Failed to calculate code", e);
+            throw new RuntimeException("Failed to calculate MFA code", e);
+        }
     }
 
     /**

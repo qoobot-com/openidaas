@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -48,6 +50,9 @@ public class RegisteredClientEntity {
     
     @Column(length = 500)
     private String clientAuthenticationMethods;
+
+    @Column(length = 500)
+    private String authorizationGrantTypes;
     
     @Column(length = 2000)
     private String clientSettings;

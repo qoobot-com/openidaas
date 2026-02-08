@@ -109,7 +109,7 @@ public class SecurityConfig {
             .headers(headers -> headers
                 .contentSecurityPolicy(csp -> csp.policyDirectives(getContentSecurityPolicy()))
                 .frameOptions(frame -> frame.deny())
-                .xssProtection(xss -> xss.enable(true))
+                .xssProtection(xss -> xss.headerValue(org.springframework.security.web.header.writers.XXssProtectionHeaderWriter.HeaderValue.ENABLED))
                 .httpStrictTransportSecurity(hsts -> 
                     hsts.includeSubDomains(true).maxAgeInSeconds(31536000)
                 )

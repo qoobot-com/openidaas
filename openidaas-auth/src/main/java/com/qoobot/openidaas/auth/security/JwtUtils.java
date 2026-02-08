@@ -33,11 +33,11 @@ public class JwtUtils {
      * 从 JWT 令牌中获取用户名
      */
     public String getUserNameFromJwtToken(String token) {
-        return Jwts.parser()
-                .verifyWith(key)
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
                 .build()
-                .parseSignedClaims(token)
-                .getPayload()
+                .parseClaimsJws(token)
+                .getBody()
                 .getSubject();
     }
     
@@ -50,10 +50,10 @@ public class JwtUtils {
             SecurityConstants.TOKEN_EXPIRATION_HOURS * 60 * 60 * 1000);
         
         return Jwts.builder()
-                .subject(username)
-                .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(key)
+                .setSubject(username)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(key, io.jsonwebtoken.SignatureAlgorithm.HS512)
                 .compact();
     }
     
@@ -62,10 +62,10 @@ public class JwtUtils {
      */
     public boolean validateJwtToken(String authToken) {
         try {
-            Jwts.parser()
-                .verifyWith(key)
+            Jwts.parserBuilder()
+                .setSigningKey(key)
                 .build()
-                .parseSignedClaims(authToken);
+                .parseClaimsJws(authToken);
             return true;
         } catch (SecurityException e) {
             log.error("Invalid JWT signature: {}", e.getMessage());

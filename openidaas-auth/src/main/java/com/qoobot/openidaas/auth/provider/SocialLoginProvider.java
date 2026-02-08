@@ -224,7 +224,12 @@ public class SocialLoginProvider implements AuthenticationProvider {
         params.put("grant_type", "authorization_code");
         
         ResponseEntity<String> response = restTemplate.postForEntity(url, params, String.class);
-        JsonNode jsonNode = objectMapper.readTree(response.getBody());
+        JsonNode jsonNode;
+        try {
+            jsonNode = objectMapper.readTree(response.getBody());
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new RuntimeException("Failed to parse JSON response", e);
+        }
         
         return jsonNode.path("access_token").asText();
     }
@@ -241,7 +246,12 @@ public class SocialLoginProvider implements AuthenticationProvider {
                 null,
                 String.class);
         
-        JsonNode jsonNode = objectMapper.readTree(response.getBody());
+        JsonNode jsonNode;
+        try {
+            jsonNode = objectMapper.readTree(response.getBody());
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new RuntimeException("Failed to parse JSON response", e);
+        }
         
         WechatUserInfo userInfo = new WechatUserInfo();
         userInfo.openid = jsonNode.path("openid").asText();
@@ -330,9 +340,11 @@ public class SocialLoginProvider implements AuthenticationProvider {
         private final String token;
 
         public SocialAuthenticationToken(Object principal, Object credentials,
-                                      java.util.Collection<?> authorities,
+                                      java.util.Collection<? extends org.springframework.security.core.GrantedAuthority> authorities,
                                       String provider) {
-            super(principal, credentials, authorities);
+            super(principal, credentials, 
+                authorities != null ? authorities : 
+                java.util.Collections.emptyList());
             this.provider = provider;
             this.token = credentials != null ? credentials.toString() : null;
         }

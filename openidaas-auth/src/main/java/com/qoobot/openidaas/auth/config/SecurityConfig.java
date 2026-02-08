@@ -4,7 +4,7 @@ import com.qoobot.openidaas.auth.security.JwtAuthenticationFilter;
 import com.qoobot.openidaas.auth.security.JwtUtils;
 import com.qoobot.openidaas.auth.provider.MfaAuthenticationProvider;
 import com.qoobot.openidaas.auth.provider.SocialLoginProvider;
-import com.qoobot.openidaas.auth.service.UserDetailsService;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import com.qoobot.openidaas.core.constants.SecurityConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +30,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Spring Security 配置类
  * 
@@ -39,6 +41,7 @@ import java.util.List;
  * @author Qoobot Team
  * @since 1.0.0
  */
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -62,9 +65,7 @@ public class SecurityConfig {
             Class<?> argon2Class = Class.forName("de.mkammerer.argon2.Argon2Factory");
             if (argon2Class != null) {
                 // Argon2 配置
-                de.mkammerer.argon2.Argon2Factory factory = 
-                        (de.mkammerer.argon2.Argon2Factory) argon2Class.newInstance();
-                return new Argon2PasswordEncoder(factory);
+                return new Argon2PasswordEncoder();
             }
         } catch (Exception e) {
             // 回退到 BCrypt
@@ -170,22 +171,35 @@ public class SecurityConfig {
      * Argon2 密码编码器（可选）
      */
     private static class Argon2PasswordEncoder implements PasswordEncoder {
-        private final de.mkammerer.argon2.Argon2Factory factory;
         
-        public Argon2PasswordEncoder(de.mkammerer.argon2.Argon2Factory factory) {
-            this.factory = factory;
+        public Argon2PasswordEncoder() {
+            // 无参数构造函数
         }
         
         @Override
         public String encode(CharSequence rawPassword) {
-            de.mkammerer.argon2.Argon2 argon2 = factory.create();
-            return argon2.hash(3, 65536, 1, rawPassword.toString());
+            try {
+                Class<?> argon2Class = Class.forName("de.mkammerer.argon2.Argon2Factory");
+                Object argon2Instance = argon2Class.getMethod("create").invoke(null);
+                return (String) argon2Instance.getClass()
+                    .getMethod("hash", int.class, int.class, int.class, String.class)
+                    .invoke(argon2Instance, 3, 65536, 1, rawPassword.toString());
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to encode password with Argon2", e);
+            }
         }
         
         @Override
         public boolean matches(CharSequence rawPassword, String encodedPassword) {
-            de.mkammerer.argon2.Argon2 argon2 = factory.create(encodedPassword);
-            return argon2.verify(rawPassword.toString());
+            try {
+                Class<?> argon2Class = Class.forName("de.mkammerer.argon2.Argon2Factory");
+                Object argon2Instance = argon2Class.getMethod("create").invoke(null);
+                return (Boolean) argon2Instance.getClass()
+                    .getMethod("verify", String.class, String.class)
+                    .invoke(argon2Instance, encodedPassword, rawPassword.toString());
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to verify password with Argon2", e);
+            }
         }
     }
 }

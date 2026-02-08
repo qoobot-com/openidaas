@@ -1,10 +1,9 @@
 package com.qoobot.openidaas.user.controller;
 
-import com.qoobot.openidaas.core.dto.UserDTO;
-import com.qoobot.openidaas.core.entity.User;
-import com.qoobot.openidaas.core.service.UserService;
 import com.qoobot.openidaas.user.dto.CreateUserRequest;
 import com.qoobot.openidaas.user.dto.UpdateUserRequest;
+import com.qoobot.openidaas.user.dto.UserDTO;
+import com.qoobot.openidaas.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,23 +30,21 @@ public class UserController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserDTO> createUser(@RequestBody CreateUserRequest request) {
-        User user = userService.toEntity(request);
-        User created = userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.toDTO(created));
+        UserDTO created = userService.createUser(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
-        User user = userService.findUserById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return ResponseEntity.ok(userService.toDTO(user));
+        UserDTO user = userService.getUserById(id);
+        return ResponseEntity.ok(user);
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<UserDTO>> getAllUsers(Pageable pageable) {
-        Page<User> users = userService.findAllUsers(pageable);
-        return ResponseEntity.ok(users.map(userService::toDTO));
+        Page<UserDTO> users = userService.getAllUsers(pageable);
+        return ResponseEntity.ok(users);
     }
 
     @PutMapping("/{id}")
@@ -55,17 +52,14 @@ public class UserController {
     public ResponseEntity<UserDTO> updateUser(
             @PathVariable Long id,
             @RequestBody UpdateUserRequest request) {
-        User user = userService.findUserById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        userService.updateUserFromDTO(user, request);
-        User updated = userService.updateUser(user);
-        return ResponseEntity.ok(userService.toDTO(updated));
+        UserDTO updated = userService.updateUser(id, request);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+        userService.deleteUser(id, "Deleted via API");
         return ResponseEntity.noContent().build();
     }
 }

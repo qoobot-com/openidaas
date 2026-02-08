@@ -30,8 +30,8 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(callSuper = true, exclude = {"children", "users"})
-public class Department extends BaseEntity {
+@ToString(exclude = {"children", "users"})
+public class Department {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

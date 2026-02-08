@@ -90,8 +90,8 @@ public class AuditLogAspect {
 
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         
-        String username = SecurityUtils.getCurrentUsername();
-        Long userId = SecurityUtils.getCurrentUserId();
+        String username = SecurityUtils.getCurrentUsername().orElse("anonymous");
+        Long userId = null; // TODO: 从认证信息中获取用户ID
         String ip = getClientIp();
         String userAgent = getUserAgent();
 

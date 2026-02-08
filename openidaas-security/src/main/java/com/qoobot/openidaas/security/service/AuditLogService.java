@@ -4,7 +4,7 @@ import com.qoobot.openidaas.security.audit.AuditLogEvent;
 import com.qoobot.openidaas.security.config.SecurityProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuditLogService {
 
-    private final ElasticsearchRestTemplate elasticsearchTemplate;
+    private final ElasticsearchOperations elasticsearchTemplate;
     private final SecurityProperties securityProperties;
 
     /**

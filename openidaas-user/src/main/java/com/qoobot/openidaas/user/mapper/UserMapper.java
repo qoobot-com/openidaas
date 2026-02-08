@@ -55,6 +55,18 @@ public interface UserMapper {
     User toEntity(CreateUserRequest request);
 
     /**
+     * 更新用户实体
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "username", ignore = true)
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "salt", ignore = true)
+    @Mapping(target = "userRoles", ignore = true)
+    @Mapping(target = "attributes", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    void updateUserFromDto(UpdateUserRequest request, @MappingTarget User user);
+
+    /**
      * 部门实体转DTO
      */
     @Mapping(target = "parentName", ignore = true)

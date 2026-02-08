@@ -3,6 +3,8 @@ package com.qoobot.openidaas.user.dto;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * 更新用户请求DTO
  * 

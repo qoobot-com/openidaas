@@ -47,38 +47,9 @@ public class JwtDecoderConfig {
      * 使用 NimbusDS 库实现 JWT 解析和验证
      */
     @Bean
-    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource,
-                                 AuthorizationServerSettings authorizationServerSettings) {
-        
-        ConfigurableJWTProcessor<SecurityContext> jwtProcessor = 
-                new DefaultJWTProcessor<>();
-        
-        // 配置 JWS Key 选择器
-        JWSKeySelector<SecurityContext> jwsKeySelector = 
-                new JWSVerificationKeySelector<>(
-                        Collections.singletonList(JOSEObjectType.JWT),
-                        jwkSource);
-        
-        jwtProcessor.setJWSKeySelector(jwsKeySelector);
-        
-        // 配置 JWT 处理器选项
-        jwtProcessor.setJWTClaimsSetVerifier(
-                new DefaultJWTClaimsVerifier.Builder<SecurityContext>()
-                        .build());
-        
-        // 配置 JWK Set 资源获取器
-        DefaultResourceRetriever resourceRetriever = new DefaultResourceRetriever();
-        resourceRetriever.setConnectTimeout(Duration.ofSeconds(5));
-        resourceRetriever.setReadTimeout(Duration.ofSeconds(5));
-        
-        // 创建 JWT 解码器
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder
-                .withJwkSetUri(jwkSetUri)
-                .jwkSetUriResolver(uri -> 
-                    authorizationServerSettings.getJwkSetUri())
-                .resourceRetriever(resourceRetriever)
-                .processor(jwtProcessor)
-                .build();
+    public JwtDecoder jwtDecoder() {
+        // 简单的 JWT 解码器配置
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
         
         log.info("JWT Decoder configured with JWK Set URI: {}", jwkSetUri);
         
@@ -89,42 +60,16 @@ public class JwtDecoderConfig {
      * 自定义 JWT 解码器（支持自定义验证逻辑）
      */
     @Bean
-    public JwtDecoder customJwtDecoder(JWKSource<SecurityContext> jwkSource) {
-        return new NimbusJwtDecoder(jwkSource) {
-            @Override
-            public org.springframework.security.oauth2.jwt.Jwt decode(
-                    String token) throws Exception {
-                
-                // 解析 JWT
-                JWT jwt = JWTParser.parse(token);
-                
-                // 验证 JWT 签名
-                validateJwtSignature(jwt);
-                
-                // 验证 JWT claims
-                validateJwtClaims(jwt);
-                
-                // 调用父类解码方法
-                return super.decode(token);
-            }
+    public JwtDecoder customJwtDecoder() {
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+        
+        return token -> {
+            org.springframework.security.oauth2.jwt.Jwt decodedJwt = decoder.decode(token);
             
-            /**
-             * 验证 JWT 签名
-             */
-            private void validateJwtSignature(JWT jwt) {
-                // 实现签名验证逻辑
-                // 检查算法、密钥等
-                log.debug("Validating JWT signature for token: {}", jwt.getHeader().getKeyID());
-            }
+            // 可以在这里添加自定义验证逻辑
+            log.debug("Decoded JWT for subject: {}", decodedJwt.getSubject());
             
-            /**
-             * 验证 JWT Claims
-             */
-            private void validateJwtClaims(JWT jwt) {
-                // 实现 Claims 验证逻辑
-                // 检查过期时间、发行者、受众等
-                log.debug("Validating JWT claims for token: {}", jwt.getJWTClaimsSet().getSubject());
-            }
+            return decodedJwt;
         };
     }
 }

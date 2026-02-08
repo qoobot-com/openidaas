@@ -1,5 +1,7 @@
 package com.qoobot.openidaas.core.exception;
 
+import java.util.Arrays;
+
 /**
  * 租户未找到异常
  * 
@@ -10,8 +12,8 @@ public class TenantNotFoundException extends RuntimeException {
     
     private static final long serialVersionUID = 1L;
     
-    public TenantNotFoundException(String message) {
-        super(message);
+    public TenantNotFoundException(String... message) {
+        super(Arrays.toString(message));
     }
     
     public TenantNotFoundException(Long tenantId) {

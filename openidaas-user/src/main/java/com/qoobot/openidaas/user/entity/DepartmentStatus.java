@@ -15,10 +15,10 @@ public enum DepartmentStatus {
     /**
      * 已停用
      */
-    DISABLED,
+    INACTIVE,
 
     /**
-     * 已解散
+     * 已删除
      */
-    DISSOLVED
+    DELETED
 }

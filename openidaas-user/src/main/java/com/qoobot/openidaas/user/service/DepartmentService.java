@@ -104,7 +104,7 @@ public class DepartmentService {
         }
 
         // 检查是否有用户
-        if (userRepository.hasUsers(id)) {
+        if (userRepository.existsByDepartmentId(id)) {
             throw new DepartmentHasUsersException("Cannot delete department with users");
         }
 

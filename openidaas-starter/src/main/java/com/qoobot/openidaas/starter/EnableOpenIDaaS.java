@@ -4,6 +4,8 @@ import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
 
+import com.qoobot.openidaas.starter.autoconfigure.OpenIDaaSAutoConfiguration;
+
 /**
  * OpenIDaaS 启用注解
  *

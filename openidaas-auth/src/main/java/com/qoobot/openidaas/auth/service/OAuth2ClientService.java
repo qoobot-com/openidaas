@@ -8,7 +8,6 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.stereotype.Service;
@@ -19,6 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * OAuth2 客户端服务
@@ -32,7 +32,7 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class OAuth2ClientService implements RegisteredClientRepository {
+public class OAuth2ClientService implements org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository {
 
     private final RegisteredClientRepository registeredClientRepository;
 
@@ -48,7 +48,7 @@ public class OAuth2ClientService implements RegisteredClientRepository {
      * @return 注册的客户端
      */
     @Transactional
-    public RegisteredClient registerClient(String clientId,
+    public org.springframework.security.oauth2.server.authorization.client.RegisteredClient registerClient(String clientId,
                                         String clientSecret,
                                         List<String> redirectUris,
                                         List<String> scopes,
@@ -58,12 +58,12 @@ public class OAuth2ClientService implements RegisteredClientRepository {
         // 转换授权类型
         List<AuthorizationGrantType> authorizationGrantTypes = grantTypes.stream()
                 .map(AuthorizationGrantType::new)
-                .toList();
+                .collect(Collectors.toList());
         
         // 转换认证方式
         List<ClientAuthenticationMethod> authMethods = clientAuthenticationMethods.stream()
                 .map(ClientAuthenticationMethod::new)
-                .toList();
+                .collect(Collectors.toList());
         
         // 创建 Token 设置
         TokenSettings tokenSettings = TokenSettings.builder()
@@ -80,7 +80,8 @@ public class OAuth2ClientService implements RegisteredClientRepository {
                 .build();
         
         // 创建 RegisteredClient
-        RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
+        org.springframework.security.oauth2.server.authorization.client.RegisteredClient registeredClient = 
+            org.springframework.security.oauth2.server.authorization.client.RegisteredClient.withId(UUID.randomUUID().toString())
                 .clientId(clientId)
                 .clientSecret(clientSecret)
                 .authorizationGrantTypes(grants -> 
@@ -107,7 +108,7 @@ public class OAuth2ClientService implements RegisteredClientRepository {
      * @return 默认客户端
      */
     @Transactional
-    public RegisteredClient registerDefaultClient() {
+    public org.springframework.security.oauth2.server.authorization.client.RegisteredClient registerDefaultClient() {
         return registerClient(
                 "openidaas-client",
                 "{noop}openidaas-secret",
@@ -138,7 +139,7 @@ public class OAuth2ClientService implements RegisteredClientRepository {
      */
     @Transactional
     public void updateClient(String clientId, ClientUpdates updates) {
-        RegisteredClient client = findByClientId(clientId);
+        org.springframework.security.oauth2.server.authorization.client.RegisteredClient client = findByClientId(clientId);
         
         if (client == null) {
             throw new RuntimeException("Client not found: " + clientId);
@@ -155,10 +156,10 @@ public class OAuth2ClientService implements RegisteredClientRepository {
      */
     @Transactional
     public void deleteClient(String clientId) {
-        RegisteredClient client = findByClientId(clientId);
+        org.springframework.security.oauth2.server.authorization.client.RegisteredClient client = findByClientId(clientId);
         
         if (client != null) {
-            removeByClientId(clientId);
+            registeredClientRepository.deleteByClientId(clientId);
             log.info("Deleted OAuth2 client: {}", clientId);
         }
     }
@@ -167,7 +168,7 @@ public class OAuth2ClientService implements RegisteredClientRepository {
      * 查询客户端
      */
     @Override
-    public RegisteredClient findByClientId(String clientId) {
+    public org.springframework.security.oauth2.server.authorization.client.RegisteredClient findByClientId(String clientId) {
         Optional<RegisteredClientEntity> entity = 
                 registeredClientRepository.findByClientId(clientId);
         
@@ -178,10 +179,14 @@ public class OAuth2ClientService implements RegisteredClientRepository {
      * 根据 ID 查询客户端
      */
     @Override
-    public RegisteredClient findById(String id) {
-        return registeredClientRepository.findById(id)
-                .map(this::toRegisteredClient)
-                .orElse(null);
+    public org.springframework.security.oauth2.server.authorization.client.RegisteredClient findById(String id) {
+        // 注意：这里需要特殊处理，因为Spring Data JPA的findById期望Long类型
+        // 但我们存储的是String类型的ID，所以需要先通过其他方式查找
+        Optional<RegisteredClientEntity> entity = registeredClientRepository.findAll().stream()
+                .filter(e -> e.getId().equals(id))
+                .findFirst();
+        
+        return entity.map(this::toRegisteredClient).orElse(null);
     }
 
     /**
@@ -189,7 +194,7 @@ public class OAuth2ClientService implements RegisteredClientRepository {
      */
     @Transactional
     @Override
-    public void save(RegisteredClient registeredClient) {
+    public void save(org.springframework.security.oauth2.server.authorization.client.RegisteredClient registeredClient) {
         RegisteredClientEntity entity = toEntity(registeredClient);
         registeredClientRepository.save(entity);
     }
@@ -202,7 +207,7 @@ public class OAuth2ClientService implements RegisteredClientRepository {
      * @return 是否验证通过
      */
     public boolean validateClientSecret(String clientId, String clientSecret) {
-        RegisteredClient client = findByClientId(clientId);
+        org.springframework.security.oauth2.server.authorization.client.RegisteredClient client = findByClientId(clientId);
         
         if (client == null) {
             return false;
@@ -221,7 +226,7 @@ public class OAuth2ClientService implements RegisteredClientRepository {
      * @return 是否启用 PKCE
      */
     public boolean isPkceRequired(String clientId) {
-        RegisteredClient client = findByClientId(clientId);
+        org.springframework.security.oauth2.server.authorization.client.RegisteredClient client = findByClientId(clientId);
         
         if (client == null) {
             return false;
@@ -238,7 +243,7 @@ public class OAuth2ClientService implements RegisteredClientRepository {
      * @return 是否匹配
      */
     public boolean validateRedirectUri(String clientId, String redirectUri) {
-        RegisteredClient client = findByClientId(clientId);
+        org.springframework.security.oauth2.server.authorization.client.RegisteredClient client = findByClientId(clientId);
         
         if (client == null) {
             return false;
@@ -255,7 +260,7 @@ public class OAuth2ClientService implements RegisteredClientRepository {
      * @return 是否有效
      */
     public boolean validateScopes(String clientId, List<String> requestedScopes) {
-        RegisteredClient client = findByClientId(clientId);
+        org.springframework.security.oauth2.server.authorization.client.RegisteredClient client = findByClientId(clientId);
         
         if (client == null) {
             return false;
@@ -268,17 +273,61 @@ public class OAuth2ClientService implements RegisteredClientRepository {
     /**
      * 转换为 RegisteredClient
      */
-    private RegisteredClient toRegisteredClient(RegisteredClientEntity entity) {
-        // 实现转换逻辑
-        return null;
+    private org.springframework.security.oauth2.server.authorization.client.RegisteredClient toRegisteredClient(RegisteredClientEntity entity) {
+        return org.springframework.security.oauth2.server.authorization.client.RegisteredClient.withId(String.valueOf(entity.getId()))
+                .clientId(entity.getClientId())
+                .clientSecret(entity.getClientSecret())
+                .clientName(entity.getClientName())
+                .redirectUris(uris -> uris.addAll(
+                    Arrays.asList(entity.getRedirectUris().split(","))
+                ))
+                .scopes(scopes -> scopes.addAll(
+                    Arrays.asList(entity.getScopes().split(","))
+                ))
+                .authorizationGrantTypes(types -> types.addAll(
+                    Arrays.stream(entity.getAuthorizationGrantTypes().split(","))
+                        .map(AuthorizationGrantType::new)
+                        .toList()
+                ))
+                .clientAuthenticationMethods(methods -> methods.addAll(
+                    Arrays.stream(entity.getClientAuthenticationMethods().split(","))
+                        .map(ClientAuthenticationMethod::new)
+                        .toList()
+                ))
+                .clientSettings(ClientSettings.builder()
+                    .requireAuthorizationConsent(true)
+                    .requireProofKey(true)
+                    .build())
+                .tokenSettings(TokenSettings.builder()
+                    .accessTokenTimeToLive(Duration.ofHours(1))
+                    .refreshTokenTimeToLive(Duration.ofDays(30))
+                    .reuseRefreshTokens(false)
+                    .build())
+                .build();
     }
 
     /**
      * 转换为 Entity
      */
-    private RegisteredClientEntity toEntity(RegisteredClient client) {
-        // 实现转换逻辑
-        return null;
+    private RegisteredClientEntity toEntity(org.springframework.security.oauth2.server.authorization.client.RegisteredClient client) {
+        RegisteredClientEntity entity = new RegisteredClientEntity();
+        entity.setId(Long.valueOf(client.getId()));
+        entity.setClientId(client.getClientId());
+        entity.setClientSecret(client.getClientSecret());
+        entity.setClientName(client.getClientName());
+        entity.setRedirectUris(String.join(",", client.getRedirectUris()));
+        entity.setScopes(String.join(",", client.getScopes()));
+        entity.setAuthorizationGrantTypes(
+            client.getAuthorizationGrantTypes().stream()
+                .map(AuthorizationGrantType::getValue)
+                .collect(Collectors.joining(","))
+        );
+        entity.setClientAuthenticationMethods(
+            client.getClientAuthenticationMethods().stream()
+                .map(ClientAuthenticationMethod::getValue)
+                .collect(Collectors.joining(","))
+        );
+        return entity;
     }
 
     /**
