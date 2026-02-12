@@ -62,19 +62,6 @@ export const constantRoutes: RouteRecordRaw[] = [
       }
     ]
   },
-  {
-    path: '/application',
-    component: Layout,
-    meta: { title: '应用管理', icon: 'Platform' },
-    children: [
-      {
-        path: 'list',
-        name: 'ApplicationList',
-        component: () => import('@/modules/application/ApplicationList.vue'),
-        meta: { title: '应用列表', icon: 'List' }
-      }
-    ]
-  }
 ]
 
 // 动态路由
@@ -135,6 +122,181 @@ export const asyncRoutes: RouteRecordRaw[] = [
     ]
   },
   {
+    path: '/organization',
+    component: Layout,
+    redirect: '/organization/departments',
+    name: 'Organization',
+    meta: {
+      title: '组织管理',
+      icon: 'office-building',
+      permissions: ['organization:manage']
+    },
+    children: [
+      {
+        path: 'departments',
+        component: () => import('@/modules/organization/DepartmentTree.vue'),
+        name: 'DepartmentManagement',
+        meta: {
+          title: '部门管理',
+          icon: 'location',
+          permissions: ['organization:department']
+        }
+      },
+      {
+        path: 'positions',
+        component: () => import('@/modules/organization/PositionList.vue'),
+        name: 'PositionManagement',
+        meta: {
+          title: '职位管理',
+          icon: 'user-filled',
+          permissions: ['organization:position']
+        }
+      }
+    ]
+  },
+  {
+    path: '/role',
+    component: Layout,
+    redirect: '/role/list',
+    name: 'Role',
+    meta: {
+      title: '角色管理',
+      icon: 'tickets',
+      permissions: ['role:manage']
+    },
+    children: [
+      {
+        path: 'list',
+        component: () => import('@/modules/role/RoleList.vue'),
+        name: 'RoleList',
+        meta: {
+          title: '角色列表',
+          icon: 'list',
+          permissions: ['role:list']
+        }
+      },
+      {
+        path: 'create',
+        component: () => import('@/modules/role/RoleForm.vue'),
+        name: 'RoleCreate',
+        meta: {
+          title: '创建角色',
+          hidden: true,
+          activeMenu: '/role/list'
+        }
+      },
+      {
+        path: 'edit/:id(\\d+)',
+        component: () => import('@/modules/role/RoleForm.vue'),
+        name: 'RoleEdit',
+        meta: {
+          title: '编辑角色',
+          hidden: true,
+          activeMenu: '/role/list'
+        },
+        props: true
+      }
+    ]
+  },
+  {
+    path: '/audit',
+    component: Layout,
+    redirect: '/audit/logs',
+    name: 'Audit',
+    meta: {
+      title: '审计管理',
+      icon: 'document',
+      permissions: ['audit:manage']
+    },
+    children: [
+      {
+        path: 'logs',
+        component: () => import('@/modules/audit/AuditLogList.vue'),
+        name: 'AuditLogs',
+        meta: {
+          title: '操作日志',
+          icon: 'tickets',
+          permissions: ['audit:log']
+        }
+      },
+      {
+        path: 'events',
+        component: () => import('@/modules/audit/SecurityEventList.vue'),
+        name: 'SecurityEvents',
+        meta: {
+          title: '安全事件',
+          icon: 'warning',
+          permissions: ['audit:event']
+        }
+      },
+      {
+        path: 'statistics',
+        component: () => import('@/modules/audit/AuditStatistics.vue'),
+        name: 'AuditStatistics',
+        meta: {
+          title: '统计分析',
+          icon: 'data-analysis',
+          permissions: ['audit:statistics']
+        }
+      }
+    ]
+  },
+  {
+    path: '/application',
+    component: Layout,
+    redirect: '/application/list',
+    name: 'Application',
+    meta: {
+      title: '应用管理',
+      icon: 'platform',
+      permissions: ['application:manage']
+    },
+    children: [
+      {
+        path: 'list',
+        name: 'ApplicationList',
+        component: () => import('@/modules/application/ApplicationList.vue'),
+        meta: {
+          title: '应用列表',
+          icon: 'list',
+          permissions: ['application:list']
+        }
+      },
+      {
+        path: 'create',
+        component: () => import('@/modules/application/ApplicationForm.vue'),
+        name: 'ApplicationCreate',
+        meta: {
+          title: '新增应用',
+          hidden: true,
+          activeMenu: '/application/list'
+        }
+      },
+      {
+        path: 'edit/:id(\\d+)',
+        component: () => import('@/modules/application/ApplicationForm.vue'),
+        name: 'ApplicationEdit',
+        meta: {
+          title: '编辑应用',
+          hidden: true,
+          activeMenu: '/application/list'
+        },
+        props: true
+      },
+      {
+        path: 'detail/:id(\\d+)',
+        component: () => import('@/modules/application/AppDetail.vue'),
+        name: 'ApplicationDetail',
+        meta: {
+          title: '应用详情',
+          hidden: true,
+          activeMenu: '/application/list'
+        },
+        props: true
+      }
+    ]
+  },
+  {
     path: '/system',
     component: Layout,
     redirect: '/system/config',
@@ -156,21 +318,10 @@ export const asyncRoutes: RouteRecordRaw[] = [
         }
       }
     ]
-  },
-  {
-    path: '/application',
-    component: Layout,
-    meta: { title: '应用管理', icon: 'Platform' },
-    children: [
-      {
-        path: 'list',
-        name: 'ApplicationList',
-        component: () => import('@/modules/application/ApplicationList.vue'),
-        meta: { title: '应用列表', icon: 'List' }
-      }
-    ]
   }
 ]
+
+// 动态路由
 
 const router = createRouter({
   history: createWebHistory('/'),

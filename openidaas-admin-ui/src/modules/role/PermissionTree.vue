@@ -23,14 +23,14 @@
             <div class="custom-tree-node">
               <div class="node-content">
                 <el-icon>
-                  <component :is="getIcon(data.type)" />
+                  <component :is="getIcon(data.permType)" />
                 </el-icon>
                 <span class="node-label">{{ node.label }}</span>
-                <el-tag :type="getTypeTag(data.type)" size="small" style="margin-left: 8px">
-                  {{ getTypeLabel(data.type) }}
+                <el-tag :type="getTypeTag(data.permType)" size="small" style="margin-left: 8px">
+                  {{ getTypeLabel(data.permType) }}
                 </el-tag>
-                <el-tag v-if="data.code" size="small" type="info" style="margin-left: 8px">
-                  {{ data.code }}
+                <el-tag v-if="data.permCode" size="small" type="info" style="margin-left: 8px">
+                  {{ data.permCode }}
                 </el-tag>
               </div>
               <div class="node-actions">
@@ -52,14 +52,14 @@
       @close="resetForm"
     >
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px">
-        <el-form-item label="权限名称" prop="name">
-          <el-input v-model="formData.name" placeholder="请输入权限名称" />
+        <el-form-item label="权限名称" prop="permName">
+          <el-input v-model="formData.permName" placeholder="请输入权限名称" />
         </el-form-item>
-        <el-form-item label="权限编码" prop="code">
-          <el-input v-model="formData.code" placeholder="请输入权限编码" />
+        <el-form-item label="权限编码" prop="permCode">
+          <el-input v-model="formData.permCode" placeholder="请输入权限编码" />
         </el-form-item>
-        <el-form-item label="权限类型" prop="type">
-          <el-select v-model="formData.type" placeholder="请选择权限类型" style="width: 100%">
+        <el-form-item label="权限类型" prop="permType">
+          <el-select v-model="formData.permType" placeholder="请选择权限类型" style="width: 100%">
             <el-option label="菜单" value="menu" />
             <el-option label="按钮/操作" value="action" />
           </el-select>
@@ -103,6 +103,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { Menu, Document } from '@element-plus/icons-vue'
+import { permissionApi } from '@/api/permission'
+import type { PermissionVO } from '@/api/permission'
 
 const formRef = ref<FormInstance>()
 const treeRef = ref()
@@ -110,123 +112,22 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const submitting = ref(false)
 const isEdit = ref(false)
+const loading = ref(false)
 
 const treeProps = {
-  label: 'name',
+  label: 'permName',
   children: 'children',
   value: 'id'
 }
 
-// 模拟权限树数据 - 实际应从后端获取
-const treeData = ref([
-  {
-    id: 1,
-    name: '系统管理',
-    code: 'system',
-    type: 'menu',
-    path: '/system',
-    icon: 'Setting',
-    sortOrder: 1,
-    children: [
-      {
-        id: 11,
-        name: '用户管理',
-        code: 'system:user',
-        type: 'menu',
-        path: '/system/user',
-        component: 'user/UserList',
-        icon: 'User',
-        sortOrder: 1,
-        children: [
-          { id: 111, name: '查看用户', code: 'user:view', type: 'action', sortOrder: 1 },
-          { id: 112, name: '创建用户', code: 'user:create', type: 'action', sortOrder: 2 },
-          { id: 113, name: '编辑用户', code: 'user:edit', type: 'action', sortOrder: 3 },
-          { id: 114, name: '删除用户', code: 'user:delete', type: 'action', sortOrder: 4 }
-        ]
-      },
-      {
-        id: 12,
-        name: '角色管理',
-        code: 'system:role',
-        type: 'menu',
-        path: '/system/role',
-        component: 'role/RoleList',
-        icon: 'UserFilled',
-        sortOrder: 2,
-        children: [
-          { id: 121, name: '查看角色', code: 'role:view', type: 'action', sortOrder: 1 },
-          { id: 122, name: '创建角色', code: 'role:create', type: 'action', sortOrder: 2 },
-          { id: 123, name: '编辑角色', code: 'role:edit', type: 'action', sortOrder: 3 },
-          { id: 124, name: '删除角色', code: 'role:delete', type: 'action', sortOrder: 4 },
-          { id: 125, name: '分配权限', code: 'role:assign', type: 'action', sortOrder: 5 }
-        ]
-      },
-      {
-        id: 13,
-        name: '部门管理',
-        code: 'system:dept',
-        type: 'menu',
-        path: '/system/dept',
-        component: 'organization/DepartmentTree',
-        icon: 'OfficeBuilding',
-        sortOrder: 3,
-        children: [
-          { id: 131, name: '查看部门', code: 'dept:view', type: 'action', sortOrder: 1 },
-          { id: 132, name: '创建部门', code: 'dept:create', type: 'action', sortOrder: 2 },
-          { id: 133, name: '编辑部门', code: 'dept:edit', type: 'action', sortOrder: 3 },
-          { id: 134, name: '删除部门', code: 'dept:delete', type: 'action', sortOrder: 4 }
-        ]
-      }
-    ]
-  },
-  {
-    id: 2,
-    name: '业务管理',
-    code: 'business',
-    type: 'menu',
-    path: '/business',
-    icon: 'Briefcase',
-    sortOrder: 2,
-    children: [
-      {
-        id: 21,
-        name: '应用管理',
-        code: 'business:app',
-        type: 'menu',
-        path: '/business/app',
-        component: 'application/ApplicationList',
-        icon: 'Application',
-        sortOrder: 1,
-        children: [
-          { id: 211, name: '查看应用', code: 'app:view', type: 'action', sortOrder: 1 },
-          { id: 212, name: '创建应用', code: 'app:create', type: 'action', sortOrder: 2 },
-          { id: 213, name: '编辑应用', code: 'app:edit', type: 'action', sortOrder: 3 },
-          { id: 214, name: '删除应用', code: 'app:delete', type: 'action', sortOrder: 4 }
-        ]
-      },
-      {
-        id: 22,
-        name: '审计管理',
-        code: 'business:audit',
-        type: 'menu',
-        path: '/business/audit',
-        component: 'audit/AuditLogList',
-        icon: 'Document',
-        sortOrder: 2,
-        children: [
-          { id: 221, name: '查看日志', code: 'audit:view', type: 'action', sortOrder: 1 },
-          { id: 222, name: '导出日志', code: 'audit:export', type: 'action', sortOrder: 2 }
-        ]
-      }
-    ]
-  }
-])
+// 权限树数据
+const treeData = ref<PermissionVO[]>([])
 
 const formData = reactive({
   id: 0,
-  name: '',
-  code: '',
-  type: 'menu',
+  permName: '',
+  permCode: '',
+  permType: 'menu',
   parentId: undefined as number | undefined,
   sortOrder: 0,
   path: '',
@@ -236,13 +137,13 @@ const formData = reactive({
 })
 
 const formRules: FormRules = {
-  name: [
+  permName: [
     { required: true, message: '请输入权限名称', trigger: 'blur' }
   ],
-  code: [
+  permCode: [
     { required: true, message: '请输入权限编码', trigger: 'blur' }
   ],
-  type: [
+  permType: [
     { required: true, message: '请选择权限类型', trigger: 'change' }
   ]
 }
@@ -267,6 +168,20 @@ const getIcon = (type: string) => {
   return type === 'menu' ? Menu : Document
 }
 
+// 加载权限树
+const loadPermissions = async () => {
+  loading.value = true
+  try {
+    const result = await permissionApi.getPermissionTree()
+    treeData.value = result.data || []
+  } catch (error) {
+    console.error('加载权限失败:', error)
+    ElMessage.error('加载权限失败')
+  } finally {
+    loading.value = false
+  }
+}
+
 // 新增根权限
 const handleAddRoot = () => {
   isEdit.value = false
@@ -277,7 +192,7 @@ const handleAddRoot = () => {
 }
 
 // 新增子权限
-const handleAdd = (data: any) => {
+const handleAdd = (data: PermissionVO) => {
   isEdit.value = false
   dialogTitle.value = '新增子权限'
   resetForm()
@@ -286,7 +201,7 @@ const handleAdd = (data: any) => {
 }
 
 // 编辑权限
-const handleEdit = (data: any) => {
+const handleEdit = (data: PermissionVO) => {
   isEdit.value = true
   dialogTitle.value = '编辑权限'
   Object.assign(formData, data)
@@ -294,19 +209,21 @@ const handleEdit = (data: any) => {
 }
 
 // 删除权限
-const handleDelete = async (data: any) => {
+const handleDelete = async (data: PermissionVO) => {
   if (data.children && data.children.length > 0) {
     ElMessage.warning('该权限下有子权限，不能删除')
     return
   }
   try {
-    await ElMessageBox.confirm(`确认删除权限 "${data.name}" 吗？`, '提示', {
+    await ElMessageBox.confirm(`确认删除权限 "${data.permName}" 吗？`, '提示', {
       type: 'warning'
     })
-    // 调用删除API
+    await permissionApi.deletePermission(data.id)
     ElMessage.success('删除成功')
+    loadPermissions()
   } catch (error: any) {
     if (error !== 'cancel') {
+      console.error('删除失败:', error)
       ElMessage.error('删除失败')
     }
   }
@@ -319,11 +236,38 @@ const handleSubmit = async () => {
     if (!valid) return
     submitting.value = true
     try {
-      // 调用创建/更新API
+      if (isEdit.value) {
+        await permissionApi.updatePermission({
+          id: formData.id,
+          permName: formData.permName,
+          permCode: formData.permCode,
+          permType: formData.permType,
+          parentId: formData.parentId,
+          path: formData.path,
+          component: formData.component,
+          icon: formData.icon,
+          sortOrder: formData.sortOrder,
+          description: formData.description
+        })
+      } else {
+        await permissionApi.createPermission({
+          permName: formData.permName,
+          permCode: formData.permCode,
+          permType: formData.permType,
+          parentId: formData.parentId,
+          path: formData.path,
+          component: formData.component,
+          icon: formData.icon,
+          sortOrder: formData.sortOrder,
+          description: formData.description
+        })
+      }
       ElMessage.success(isEdit.value ? '更新成功' : '创建成功')
       dialogVisible.value = false
-    } catch (error) {
-      ElMessage.error(isEdit.value ? '更新失败' : '创建失败')
+      loadPermissions()
+    } catch (error: any) {
+      console.error('提交失败:', error)
+      ElMessage.error(error.response?.data?.message || (isEdit.value ? '更新失败' : '创建失败'))
     } finally {
       submitting.value = false
     }
@@ -335,9 +279,9 @@ const resetForm = () => {
   formRef.value?.resetFields()
   Object.assign(formData, {
     id: 0,
-    name: '',
-    code: '',
-    type: 'menu',
+    permName: '',
+    permCode: '',
+    permType: 'menu',
     parentId: undefined,
     sortOrder: 0,
     path: '',
@@ -348,7 +292,7 @@ const resetForm = () => {
 }
 
 onMounted(() => {
-  // 实际应从后端加载权限树
+  loadPermissions()
 })
 </script>
 

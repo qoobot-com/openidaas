@@ -121,7 +121,7 @@ export const organizationApi = {
    * 删除部门
    */
   deleteDepartment: (id: number) =>
-    http.delete('/api/organizations/departments', { params: { id } }),
+    http.delete(`/api/organizations/departments/${id}`),
 
   /**
    * 获取部门详情

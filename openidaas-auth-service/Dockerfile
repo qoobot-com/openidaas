@@ -1,46 +1,66 @@
-# 多阶段构建 - Auth Service
-FROM maven:3.9.9-eclipse-temurin-21 AS builder
+# ============================================
+# OpenIDaaS Auth Service - 多阶段构建Dockerfile
+# ============================================
 
-WORKDIR /build
-
-COPY pom.xml .
-COPY openidaas-common/pom.xml openidaas-common/
-COPY openidaas-core/pom.xml openidaas-core/
-COPY openidaas-auth-service/pom.xml openidaas-auth-service/
-
-RUN mvn dependency:go-offline -B -q
-
-COPY openidaas-common/src openidaas-common/src
-COPY openidaas-core/src openidaas-core/src
-COPY openidaas-auth-service/src openidaas-auth-service/src
-
-RUN mvn clean package -DskipTests -pl openidaas-auth-service -am -B
-
-FROM eclipse-temurin:21-jre-alpine
-
-LABEL maintainer="QooBot <support@qoobot.com>"
-LABEL description="OpenIDaaS Authentication Service"
+# Stage 1: Maven构建
+FROM maven:3.9-eclipse-temurin-21 AS builder
 
 WORKDIR /app
 
-RUN addgroup -S openidaas && adduser -S openidaas -G openidaas
+# 复制pom.xml并下载依赖(利用Docker缓存)
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
 
-COPY --from=builder /build/openidaas-auth-service/target/openidaas-auth-service-*.jar app.jar
+# 复制源代码
+COPY src ./src
 
-RUN mkdir -p /app/logs && chown -R openidaas:openidaas /app
+# 构建应用(跳过测试)
+RUN mvn clean package -DskipTests -B
 
-USER openidaas
+# Stage 2: 运行时镜像
+FROM eclipse-temurin:21-jre-alpine
 
-ENV JAVA_OPTS="-XX:+UseContainerSupport \
-               -XX:MaxRAMPercentage=75.0 \
-               -XX:+UseG1GC \
-               -XX:+UseStringDeduplication \
-               -Djava.security.egd=file:/dev/./urandom \
-               -Dspring.profiles.active=prod"
+# 安装必要的工具
+RUN apk add --no-cache tzdata curl
 
+# 设置时区
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# 创建非root用户
+RUN addgroup -S spring && adduser -S spring -G spring
+
+WORKDIR /app
+
+# 从构建阶段复制JAR文件
+COPY --from=builder /app/target/*.jar app.jar
+
+# 修改文件所有者
+RUN chown -R spring:spring /app
+
+# 切换到非root用户
+USER spring:spring
+
+# JVM参数优化
+ENV JAVA_OPTS="-Xms512m -Xmx1024m \
+  -XX:+UseContainerSupport \
+  -XX:MaxRAMPercentage=75.0 \
+  -XX:+UseG1GC \
+  -XX:MaxGCPauseMillis=200 \
+  -XX:+HeapDumpOnOutOfMemoryError \
+  -XX:HeapDumpPath=/tmp/heapdump.hprof \
+  -XX:+PrintGCDetails \
+  -XX:+PrintGCDateStamps \
+  -Xloggc:/tmp/gc.log \
+  -Djava.security.egd=file:/dev/./urandom \
+  -Dspring.profiles.active=prod"
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:8081/actuator/health || exit 1
+
+# 暴露端口
 EXPOSE 8081
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1
-
+# 启动应用
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

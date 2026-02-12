@@ -1,0 +1,199 @@
+# ============================================
+# OpenIDaaS Auth Service Kubernetes部署配置
+# ============================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openidaas-auth-config
+  namespace: openidaas
+data:
+  application.yml: |
+    spring:
+      profiles:
+        active: prod
+      datasource:
+        url: jdbc:mysql://mysql-service:3306/open_idaas?useSSL=false&serverTimezone=Asia/Shanghai
+        username: ${DB_USERNAME}
+        password: ${DB_PASSWORD}
+      redis:
+        host: redis-service
+        port: 6379
+    app:
+      jwt:
+        secret: ${JWT_SECRET}
+        access-token-validity: 3600
+        refresh-token-validity: 2592000
+    logging:
+      level:
+        root: INFO
+        com.qoobot.openidaas: DEBUG
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: openidaas-auth-secret
+  namespace: openidaas
+type: Opaque
+stringData:
+  db-username: "openidaas"
+  db-password: "your-db-password"
+  jwt-secret: "your-jwt-secret-key-here"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openidaas-auth-service
+  namespace: openidaas
+  labels:
+    app: openidaas-auth-service
+    version: v1.0.0
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: openidaas-auth-service
+  template:
+    metadata:
+      labels:
+        app: openidaas-auth-service
+        version: v1.0.0
+    spec:
+      containers:
+      - name: auth-service
+        image: openidaas/auth-service:1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8081
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: openidaas-auth-secret
+              key: db-username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: openidaas-auth-secret
+              key: db-password
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: openidaas-auth-secret
+              key: jwt-secret
+        - name: JAVA_OPTS
+          value: "-Xms512m -Xmx1g -XX:+UseG1GC"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8081
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8081
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /actuator/health/startup
+            port: 8081
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: openidaas-auth-config
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - openidaas-auth-service
+              topologyKey: kubernetes.io/hostname
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openidaas-auth-service
+  namespace: openidaas
+  labels:
+    app: openidaas-auth-service
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8081
+    targetPort: 8081
+    protocol: TCP
+  selector:
+    app: openidaas-auth-service
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: openidaas-auth-service-hpa
+  namespace: openidaas
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: openidaas-auth-service
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: openidaas-auth-service-pdb
+  namespace: openidaas
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: openidaas-auth-service

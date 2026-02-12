@@ -533,5 +533,74 @@ export default {
     confirmExit: 'Are you sure you want to exit? Unsaved data will be lost',
     unsavedChanges: 'You have unsaved changes',
     selectAtLeastOne: 'Please select at least one item'
+  },
+
+  // ==================== Theme ====================
+  theme: {
+    light: 'Light Mode',
+    dark: 'Dark Mode',
+    auto: 'Auto Mode',
+    changed: 'Theme switched'
+  },
+
+  // ==================== Audit Statistics ====================
+  auditStatistics: {
+    title: 'Audit Statistics',
+    refresh: 'Refresh',
+    startTime: 'Start Time',
+    endTime: 'End Time',
+    totalOperations: 'Total Operations',
+    successCount: 'Success Operations',
+    failureCount: 'Failure Operations',
+    failureRate: 'Failure Rate',
+    operationTypeDistribution: 'Operation Type Distribution',
+    moduleDistribution: 'Module Distribution',
+    operationTrend: 'Operation Trend',
+    topUsers: 'Top Active Users',
+    operationTypeDetails: 'Operation Type Details',
+    moduleDetails: 'Module Operation Details',
+    operationType: 'Operation Type',
+    count: 'Count',
+    percentage: 'Percentage',
+    trend: 'Trend',
+    moduleName: 'Module Name',
+    last7Days: 'Last 7 Days',
+    failureRateTrend: 'Failure Rate Trend',
+    normalLine: 'Normal Line',
+    warningLine: 'Warning Line',
+    top10: 'TOP10'
+  },
+
+  // ==================== Error Pages ====================
+  error: {
+    pageNotFound: 'Page Not Found',
+    pageNotFoundDesc: 'Sorry, the page you are looking for does not exist or has been deleted',
+    serverError: 'Server Error',
+    serverErrorDesc: 'Sorry, an error occurred on the server. Please try again later',
+    networkError: 'Network Error',
+    networkErrorDesc: 'Network connection failed. Please check your network settings',
+    unauthorized: 'Unauthorized',
+    unauthorizedDesc: 'You do not have permission to access this page',
+    forbidden: 'Access Denied',
+    forbiddenDesc: 'You do not have permission to perform this operation',
+    returnHome: 'Return Home',
+    refresh: 'Refresh Page',
+    contactSupport: 'Contact Support'
+  },
+
+  // ==================== Empty States ====================
+  empty: {
+    noData: 'No Data',
+    noDataDesc: 'There is no data to display at the moment',
+    noSearchResult: 'No Results Found',
+    noSearchResultDesc: 'No data matching the criteria was found. Please try other keywords',
+    networkError: 'Network Error',
+    networkErrorDesc: 'Network connection failed. Please check network settings and try again',
+    noPermission: 'No Permission',
+    noPermissionDesc: 'You do not have permission to access this content',
+    create: 'Create Now',
+    refresh: 'Refresh',
+    retry: 'Retry',
+    goToLogin: 'Go to Login'
   }
 }

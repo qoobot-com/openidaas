@@ -533,5 +533,74 @@ export default {
     confirmExit: '确定要退出吗?未保存的数据将丢失',
     unsavedChanges: '您有未保存的更改',
     selectAtLeastOne: '请至少选择一项'
+  },
+
+  // ==================== 主题 ====================
+  theme: {
+    light: '浅色模式',
+    dark: '深色模式',
+    auto: '自动模式',
+    changed: '主题已切换'
+  },
+
+  // ==================== 审计统计 ====================
+  auditStatistics: {
+    title: '审计统计',
+    refresh: '刷新',
+    startTime: '开始时间',
+    endTime: '结束时间',
+    totalOperations: '总操作次数',
+    successCount: '成功操作',
+    failureCount: '失败操作',
+    failureRate: '失败率',
+    operationTypeDistribution: '操作类型分布',
+    moduleDistribution: '模块操作分布',
+    operationTrend: '操作趋势',
+    topUsers: '热门操作用户',
+    operationTypeDetails: '操作类型详细统计',
+    moduleDetails: '模块操作详细统计',
+    operationType: '操作类型',
+    count: '操作次数',
+    percentage: '占比',
+    trend: '趋势',
+    moduleName: '模块名称',
+    last7Days: '最近7天',
+    failureRateTrend: '失败率趋势',
+    normalLine: '正常线',
+    warningLine: '警告线',
+    top10: 'TOP10'
+  },
+
+  // ==================== 错误页面 ====================
+  error: {
+    pageNotFound: '页面不存在',
+    pageNotFoundDesc: '抱歉，您访问的页面不存在或已被删除',
+    serverError: '服务器错误',
+    serverErrorDesc: '抱歉，服务器出现错误，请稍后重试',
+    networkError: '网络错误',
+    networkErrorDesc: '网络连接失败，请检查网络设置',
+    unauthorized: '未授权',
+    unauthorizedDesc: '您没有权限访问此页面',
+    forbidden: '禁止访问',
+    forbiddenDesc: '您没有权限执行此操作',
+    returnHome: '返回首页',
+    refresh: '刷新页面',
+    contactSupport: '联系客服'
+  },
+
+  // ==================== 空状态 ====================
+  empty: {
+    noData: '暂无数据',
+    noDataDesc: '当前没有可显示的数据',
+    noSearchResult: '未找到结果',
+    noSearchResultDesc: '未找到符合条件的数据，请尝试其他关键词',
+    networkError: '网络错误',
+    networkErrorDesc: '网络连接失败，请检查网络设置后重试',
+    noPermission: '暂无权限',
+    noPermissionDesc: '您没有权限访问此内容',
+    create: '立即创建',
+    refresh: '刷新',
+    retry: '重试',
+    goToLogin: '去登录'
   }
 }

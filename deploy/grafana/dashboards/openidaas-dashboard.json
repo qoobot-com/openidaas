@@ -1,0 +1,158 @@
+{
+  "dashboard": {
+    "title": "OpenIDaaS监控面板",
+    "uid": "openidaas-dashboard",
+    "tags": ["openidaas", "idm", "identity"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "panels": [
+      {
+        "title": "QPS趋势",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_seconds_count{job=~\"openidaas-.*\"}[1m])) by (job)",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "yaxes": [{"format": "reqps"}, {"format": "short"}]
+      },
+      {
+        "title": "响应时间分布",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(http_server_requests_seconds_bucket{job=~\"openidaas-.*\"}[5m]))",
+            "legendFormat": "{{job}} P50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job=~\"openidaas-.*\"}[5m]))",
+            "legendFormat": "{{job}} P95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(http_server_requests_seconds_bucket{job=~\"openidaas-.*\"}[5m]))",
+            "legendFormat": "{{job}} P99"
+          }
+        ],
+        "yaxes": [{"format": "s"}, {"format": "short"}]
+      },
+      {
+        "title": "错误率",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_seconds_count{job=~\"openidaas-.*\",status=~\"5..\"}[5m])) by (job)",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "yaxes": [{"format": "reqps"}, {"format": "short"}]
+      },
+      {
+        "title": "登录成功/失败次数",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(auth_login_success_total[5m]))",
+            "legendFormat": "成功"
+          },
+          {
+            "expr": "sum(rate(auth_login_failure_total[5m]))",
+            "legendFormat": "失败"
+          }
+        ],
+        "yaxes": [{"format": "ops"}, {"format": "short"}]
+      },
+      {
+        "title": "服务可用性",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 8},
+        "targets": [
+          {
+            "expr": "avg(up{job=~\"openidaas-.*\"})",
+            "legendFormat": "可用性"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area"
+        }
+      },
+      {
+        "title": "JVM堆内存使用",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{area=\"heap\"} / jvm_memory_max_bytes{area=\"heap\"}",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "yaxes": [{"format": "percentunit"}, {"format": "short"}]
+      },
+      {
+        "title": "CPU使用率",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total{job=~\"openidaas-.*\"}[5m])",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "yaxes": [{"format": "percentunit"}, {"format": "short"}]
+      },
+      {
+        "title": "活跃线程数",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "jvm_threads_live_threads{job=~\"openidaas-.*\"}",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "yaxes": [{"format": "short"}, {"format": "short"}]
+      },
+      {
+        "title": "GC次数",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "targets": [
+          {
+            "expr": "rate(jvm_gc_pause_seconds_count[5m])",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "yaxes": [{"format": "ops"}, {"format": "short"}]
+      },
+      {
+        "title": "数据库连接数",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32},
+        "targets": [
+          {
+            "expr": "hikaricp_connections_active{job=~\"openidaas-.*\"}",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "yaxes": [{"format": "short"}, {"format": "short"}]
+      },
+      {
+        "title": "MySQL慢查询",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32},
+        "targets": [
+          {
+            "expr": "rate(mysql_global_status_slow_queries[5m])",
+            "legendFormat": "慢查询数"
+          }
+        ],
+        "yaxes": [{"format": "ops"}, {"format": "short"}]
+      }
+    ]
+  }
+}

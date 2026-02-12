@@ -82,7 +82,7 @@ export const roleApi = {
    * 删除角色
    */
   deleteRole: (id: number) =>
-    http.delete('/api/roles', { params: { id } }),
+    http.delete(`/api/roles/${id}`),
 
   /**
    * 获取角色详情

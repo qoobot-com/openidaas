@@ -13,7 +13,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ./mysql/mysql_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
       # 移除 my.cnf 挂载以避免权限警告
       - ../db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ../db/nacos-schema.sql:/docker-entrypoint-initdb.d/03-nacos-schema.sql:ro

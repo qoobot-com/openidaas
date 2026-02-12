@@ -205,22 +205,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { securityEventApi } from '@/api/audit'
 import type { SecurityEvent } from '@/types/audit'
-
-// 安全事件接口
-interface SecurityEvent {
-  id: number
-  eventType: string
-  severity: number
-  userId?: number
-  username?: string
-  ipAddress?: string
-  deviceInfo?: string
-  eventData?: any
-  handled: boolean
-  handleTime?: string
-  createdAt: string
-}
 
 // 响应式数据
 const loading = ref(false)
@@ -319,52 +305,33 @@ const toggleHandledFilter = () => {
 const queryEvents = async () => {
   loading.value = true
   try {
-    // TODO: 调用实际的API
-    // 模拟数据
-    const mockData: SecurityEvent[] = [
-      {
-        id: 1,
-        eventType: 'LOGIN_FAILED',
-        severity: 4,
-        userId: 100,
-        username: 'hacker',
-        ipAddress: '192.168.1.200',
-        deviceInfo: 'Mozilla/5.0 (Windows NT 10.0)',
-        handled: false,
-        createdAt: '2024-01-15 10:30:00'
-      },
-      {
-        id: 2,
-        eventType: 'ABNORMAL_LOGIN',
-        severity: 3,
-        userId: 50,
-        username: 'user1',
-        ipAddress: '10.0.0.100',
-        deviceInfo: 'Mozilla/5.0 (Macintosh)',
-        handled: false,
-        createdAt: '2024-01-15 09:15:00'
-      }
-    ]
-
-    // 过滤数据
-    let filteredData = mockData
-    if (severityFilter.value !== null) {
-      filteredData = filteredData.filter(item => item.severity === severityFilter.value)
-    }
-    if (handledFilter.value !== 'all') {
-      filteredData = filteredData.filter(item =>
-        handledFilter.value === 'handled' ? item.handled : !item.handled
-      )
+    const query = {
+      eventType: searchForm.eventType || undefined,
+      username: searchForm.username || undefined,
+      ipAddress: searchForm.ipAddress || undefined,
+      startTime: dateRange.value?.[0],
+      endTime: dateRange.value?.[1],
+      severity: severityFilter.value || undefined,
+      handled: handledFilter.value === 'all' ? undefined : (handledFilter.value === 'handled'),
+      page: pagination.currentPage,
+      size: pagination.pageSize
     }
 
-    tableData.value = filteredData
-    pagination.total = filteredData.length
+    const response = await securityEventApi.querySecurityEvents(query)
+    tableData.value = response.content
+    pagination.total = response.totalElements
 
-    // 更新统计
-    statistics.emergency = mockData.filter(item => item.severity === 4).length
-    statistics.high = mockData.filter(item => item.severity === 3).length
-    statistics.medium = mockData.filter(item => item.severity === 2).length
-    statistics.low = mockData.filter(item => item.severity === 1).length
+    // 查询统计数据
+    const now = new Date()
+    const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    const startTime = dateRange.value?.[0] || oneMonthAgo.toISOString().slice(0, 19).replace('T', ' ')
+    const endTime = dateRange.value?.[1] || now.toISOString().slice(0, 19).replace('T', ' ')
+
+    const stats = await securityEventApi.getSecurityStatistics(startTime, endTime)
+    statistics.emergency = stats.emergency || 0
+    statistics.high = stats.high || 0
+    statistics.medium = stats.medium || 0
+    statistics.low = stats.low || 0
   } catch (error) {
     ElMessage.error('查询安全事件失败')
   } finally {
@@ -404,9 +371,7 @@ const handleRowClick = (row: SecurityEvent) => {
 // 标记为已处理
 const handleMarkHandled = async (row: SecurityEvent) => {
   try {
-    // TODO: 调用实际的API
-    row.handled = true
-    row.handleTime = new Date().toISOString().slice(0, 19).replace('T', ' ')
+    await securityEventApi.markAsHandled(row.id)
     ElMessage.success('已标记为已处理')
     queryEvents()
     detailDialogVisible.value = false

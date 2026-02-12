@@ -50,11 +50,55 @@ export default defineConfig(({ mode }) => {
           chunkFileNames: 'static/js/[name]-[hash].js',
           entryFileNames: 'static/js/[name]-[hash].js',
           assetFileNames: 'static/[ext]/[name]-[hash].[ext]',
-          manualChunks: {
-            'vue-vendor': ['vue', 'vue-router', 'pinia'],
-            'element-plus': ['element-plus'],
-            'axios': ['axios']
+          manualChunks(id) {
+            // node_modules 依赖分包
+            if (id.includes('node_modules')) {
+              // Vue 核心
+              if (id.includes('vue') || id.includes('pinia') || id.includes('@vue')) {
+                return 'vue-vendor'
+              }
+              // Element Plus
+              if (id.includes('element-plus')) {
+                return 'element-plus'
+              }
+              // Axios
+              if (id.includes('axios')) {
+                return 'axios'
+              }
+              // ECharts 图表库
+              if (id.includes('echarts')) {
+                return 'echarts'
+              }
+              // 其他第三方库
+              return 'vendor'
+            }
+
+            // 业务模块分包
+            if (id.includes('/src/modules/')) {
+              const moduleMatch = id.match(/src\/modules\/(\w+)/)
+              if (moduleMatch) {
+                return `module-${moduleMatch[1]}`
+              }
+            }
+
+            // API 分包
+            if (id.includes('/src/api/')) {
+              return 'api'
+            }
+
+            // 组件分包
+            if (id.includes('/src/components/')) {
+              return 'components'
+            }
           }
+        }
+      },
+      // 压缩配置
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: process.env.NODE_ENV === 'production',
+          drop_debugger: true
         }
       }
     },
