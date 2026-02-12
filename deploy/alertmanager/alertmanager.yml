@@ -1,0 +1,188 @@
+# OpenIDaaS Alertmanager 配置文件
+
+global:
+  # 全局解析超时
+  resolve_timeout: 5m
+  
+  # SMTP 配置（邮件通知）
+  smtp_smarthost: '${SMTP_HOST:smtp.example.com:587}'
+  smtp_from: '${SMTP_FROM:alerts@openidaas.com}'
+  smtp_auth_username: '${SMTP_USERNAME:alerts@openidaas.com}'
+  smtp_auth_password: '${SMTP_PASSWORD}'
+  smtp_require_tls: true
+
+# 路由配置
+route:
+  # 分组等待时间（等待同一组的其他告警）
+  group_wait: 10s
+  # 分组间隔（发送后等待同一组的其他告警）
+  group_interval: 10s
+  # 重复等待时间（相同告警重复发送的间隔）
+  repeat_interval: 1h
+  # 默认接收器
+  receiver: 'default'
+  
+  # 子路由规则
+  routes:
+    # 关键告警路由
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 30s
+      repeat_interval: 5m
+    
+    # 警告告警路由
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 5m
+      repeat_interval: 30m
+    
+    # 服务宕机告警路由
+    - match:
+        alertname: 'ServiceDown'
+      receiver: 'critical-alerts'
+      group_wait: 0s
+      repeat_interval: 2m
+    
+    # 数据库告警路由
+    - match_re:
+        component: 'database'
+      receiver: 'database-alerts'
+      group_wait: 30s
+    
+    # JVM 告警路由
+    - match_re:
+        component: 'jvm'
+      receiver: 'jvm-alerts'
+      group_wait: 1m
+
+# 接收器配置
+receivers:
+  # 默认接收器
+  - name: 'default'
+    webhook_configs:
+      - url: 'http://alert-webhook:8080/webhook'
+        send_resolved: true
+  
+  # 关键告警接收器
+  - name: 'critical-alerts'
+    # 邮件通知
+    email_configs:
+      - to: 'ops@openidaas.com'
+        headers:
+          Subject: '[CRITICAL] OpenIDaaS Alert: {{ .GroupLabels.alertname }}'
+        html: |
+          {{ range .Alerts }}
+          <h2>{{ .Labels.alertname }}</h2>
+          <p><strong>Severity:</strong> {{ .Labels.severity }}</p>
+          <p><strong>Service:</strong> {{ .Labels.service }}</p>
+          <p><strong>Component:</strong> {{ .Labels.component }}</p>
+          <p><strong>Summary:</strong> {{ .Annotations.summary }}</p>
+          <p><strong>Description:</strong> {{ .Annotations.description }}</p>
+          <p><strong>Start Time:</strong> {{ .StartsAt }}</p>
+          {{ end }}
+        send_resolved: true
+    
+    # Webhook 通知
+    webhook_configs:
+      - url: 'http://alert-webhook:8080/webhook/critical'
+        send_resolved: true
+    
+    # 企业微信通知
+    wechat_configs:
+      - corp_id: '${WECHAT_CORP_ID}'
+        api_secret: '${WECHAT_API_SECRET}'
+        to_party: '1'
+        agent_id: '${WECHAT_AGENT_ID}'
+        message: |
+          {{ range .Alerts }}
+          【{{ .Labels.severity }}】{{ .Labels.alertname }}
+          服务: {{ .Labels.service }}
+          描述: {{ .Annotations.description }}
+          时间: {{ .StartsAt }}
+          {{ end }}
+        send_resolved: true
+  
+  # 警告告警接收器
+  - name: 'warning-alerts'
+    # 邮件通知
+    email_configs:
+      - to: 'dev@openidaas.com'
+        headers:
+          Subject: '[WARNING] OpenIDaaS Alert: {{ .GroupLabels.alertname }}'
+        send_resolved: true
+    
+    # Webhook 通知
+    webhook_configs:
+      - url: 'http://alert-webhook:8080/webhook/warning'
+        send_resolved: true
+  
+  # 数据库告警接收器
+  - name: 'database-alerts'
+    # 邮件通知
+    email_configs:
+      - to: 'dba@openidaas.com'
+        headers:
+          Subject: '[DATABASE] OpenIDaaS Alert: {{ .GroupLabels.alertname }}'
+        send_resolved: true
+    
+    # Webhook 通知
+    webhook_configs:
+      - url: 'http://alert-webhook:8080/webhook/database'
+        send_resolved: true
+  
+  # JVM 告警接收器
+  - name: 'jvm-alerts'
+    # 邮件通知
+    email_configs:
+      - to: 'java-team@openidaas.com'
+        headers:
+          Subject: '[JVM] OpenIDaaS Alert: {{ .GroupLabels.alertname }}'
+        send_resolved: true
+
+# 抑制规则（避免重复告警）
+inhibit_rules:
+  # 如果服务宕机，抑制该服务的其他所有告警
+  - source_match:
+      severity: 'critical'
+      alertname: 'ServiceDown'
+    target_match_re:
+      alertname: '.*'
+    equal: ['service', 'instance']
+  
+  # 如果 JVM 内存严重告警，抑制 JVM 堆内存告警
+  - source_match:
+      severity: 'critical'
+      alertname: 'CriticalHeapMemoryUsage'
+    target_match:
+      alertname: 'HighHeapMemoryUsage'
+    equal: ['service']
+  
+  # 如果 CPU 严重告警，抑制 CPU 告警
+  - source_match:
+      severity: 'critical'
+      alertname: 'CriticalCPUUsage'
+    target_match:
+      alertname: 'HighCPUUsage'
+    equal: ['instance']
+  
+  # 如果内存严重告警，抑制内存告警
+  - source_match:
+      severity: 'critical'
+      alertname: 'CriticalMemoryUsage'
+    target_match:
+      alertname: 'HighMemoryUsage'
+    equal: ['instance']
+  
+  # 如果数据库连接池严重告警，抑制数据库连接池告警
+  - source_match:
+      severity: 'critical'
+      alertname: 'CriticalDatabaseConnectionUsage'
+    target_match:
+      alertname: 'HighDatabaseConnectionUsage'
+    equal: ['service']
+
+# 模板配置（可选）
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'

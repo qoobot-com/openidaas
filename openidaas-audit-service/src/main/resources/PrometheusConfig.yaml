@@ -1,0 +1,40 @@
+# Prometheus监控配置示例
+# 此文件展示了如何在Prometheus中配置审计日志服务的监控
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'openidaas-cluster'
+    environment: 'production'
+
+# 告警规则文件
+rule_files:
+  - 'alert_rules.yml'
+
+# 监控目标配置
+scrape_configs:
+  # 审计日志服务监控
+  - job_name: 'audit-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['audit-service:8085']
+        labels:
+          service: 'audit-service'
+          component: 'audit'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # 应用实例监控
+  - job_name: 'audit-service-instances'
+    metrics_path: '/actuator/prometheus'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - openidaas
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod_name
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        target_label: app

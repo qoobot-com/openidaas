@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qoobot.openidaas.organization.mapper.OrganizationMapper">
+
+    <!-- 查询组织树 -->
+    <select id="selectOrganizationTree" resultType="com.qoobot.openidaas.organization.entity.Organization">
+        WITH RECURSIVE org_tree AS (
+            SELECT * FROM sys_organization 
+            WHERE id = #{rootId} AND deleted = 0
+            UNION ALL
+            SELECT o.* FROM sys_organization o
+            INNER JOIN org_tree ot ON o.parent_id = ot.id
+            WHERE o.deleted = 0
+        )
+        SELECT * FROM org_tree
+        ORDER BY level ASC, sort ASC, id ASC
+    </select>
+
+</mapper>

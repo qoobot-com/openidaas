@@ -1,112 +1,114 @@
 package com.qoobot.openidaas.core.service;
 
-import com.qoobot.openidaas.core.dto.TenantDTO;
-import com.qoobot.openidaas.core.entity.Tenant;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.qoobot.openidaas.core.domain.Tenant;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * 租户服务接口
- * 
- * 提供租户管理、查询等功能
- * 
- * @author Qoobot Team
- * @since 1.0.0
+ *
+ * @author QooBot
  */
 public interface TenantService {
-    
+
     /**
      * 创建租户
-     * 
-     * @param tenant 租户实体
-     * @return 创建后的租户
      */
     Tenant createTenant(Tenant tenant);
-    
+
     /**
      * 更新租户
-     * 
-     * @param tenant 租户实体
-     * @return 更新后的租户
      */
     Tenant updateTenant(Tenant tenant);
-    
+
     /**
      * 删除租户
-     * 
-     * @param tenantId 租户ID
      */
     void deleteTenant(Long tenantId);
-    
+
     /**
-     * 根据ID查找租户
-     * 
-     * @param tenantId 租户ID
-     * @return 租户实体
+     * 根据ID获取租户
      */
-    Optional<Tenant> findTenantById(Long tenantId);
-    
+    Tenant getTenantById(Long tenantId);
+
     /**
-     * 根据租户编码查找租户
-     * 
-     * @param code 租户编码
-     * @return 租户实体
+     * 根据租户编码获取租户
      */
-    Optional<Tenant> findTenantByCode(String code);
-    
+    Tenant getTenantByCode(String tenantCode);
+
     /**
-     * 分页查询租户
-     * 
-     * @param pageable 分页参数
-     * @return 租户分页结果
+     * 根据域名获取租户
      */
-    Page<Tenant> findAllTenants(Pageable pageable);
-    
+    Tenant getTenantByDomain(String domain);
+
     /**
-     * 查询所有激活的租户
-     * 
-     * @return 租户列表
+     * 获取所有租户列表
      */
-    List<Tenant> findActiveTenants();
-    
+    List<Tenant> getAllTenants();
+
     /**
-     * 更新租户状态
-     * 
-     * @param tenantId 租户ID
-     * @param status 租户状态
+     * 获取启用的租户列表
      */
-    void updateTenantStatus(Long tenantId, Tenant.TenantStatus status);
-    
+    List<Tenant> getEnabledTenants();
+
     /**
-     * 增加租户用户数量
-     * 
-     * @param tenantId 租户ID
+     * 启用租户
      */
-    void incrementUserCount(Long tenantId);
-    
+    void enableTenant(Long tenantId);
+
     /**
-     * 减少租户用户数量
-     * 
-     * @param tenantId 租户ID
+     * 禁用租户
      */
-    void decrementUserCount(Long tenantId);
-    
+    void disableTenant(Long tenantId);
+
     /**
-     * 检查租户是否达到用户数量限制
-     * 
-     * @param tenantId 租户ID
-     * @return 是否达到限制
+     * 检查租户编码是否唯一
      */
-    boolean isUserLimitReached(Long tenantId);
-    
+    boolean isTenantCodeUnique(String tenantCode, Long excludeTenantId);
+
     /**
-     * 转换为DTO
-     * 
-     * @param tenant 租户实体
-     * @return 租户DTO
+     * 检查域名是否唯一
      */
-    TenantDTO toDTO(Tenant tenant);
+    boolean isDomainUnique(String domain, Long excludeTenantId);
+
+    /**
+     * 检查租户是否过期
+     */
+    boolean isTenantExpired(Long tenantId);
+
+    /**
+     * 获取即将过期的租户
+     */
+    List<Tenant> getExpiringTenants(LocalDateTime startTime, LocalDateTime endTime);
+
+    /**
+     * 更新租户用户使用数量
+     */
+    void updateUsedUsers(Long tenantId, Integer usedUsers);
+
+    /**
+     * 更新租户应用使用数量
+     */
+    void updateUsedApps(Long tenantId, Integer usedApps);
+
+    /**
+     * 检查租户是否超出限制
+     */
+    boolean isTenantOverLimit(Long tenantId);
+
+    /**
+     * 获取超出限制的租户列表
+     */
+    List<Tenant> getOverLimitTenants();
+
+    /**
+     * 初始化租户数据
+     */
+    void initializeTenantData(Long tenantId);
+
+    /**
+     * 验证租户状态
+     */
+    boolean validateTenantStatus(Long tenantId);
 }

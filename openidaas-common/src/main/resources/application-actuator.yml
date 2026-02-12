@@ -1,0 +1,119 @@
+# Spring Boot Actuator 统一配置
+# 此文件定义了所有 OpenIDaaS 微服务的 Actuator 监控配置
+
+management:
+  # 端点配置
+  endpoints:
+    web:
+      # 暴露的端点列表
+      exposure:
+        include: health,info,metrics,prometheus,loggers,httptrace
+      # 基础路径
+      base-path: /actuator
+    # 默认禁用所有端点
+    enabled-by-default: false
+
+  # 各端点启用状态
+  endpoint:
+    # 健康检查端点
+    health:
+      enabled: true
+      # 显示详细信息
+      show-details: always
+      # 显示组件信息
+      show-components: always
+      # 显示健康指标详情
+      probes:
+        enabled: true
+        liveness-state:
+          enabled: true
+        readiness-state:
+          enabled: true
+
+    # 应用信息端点
+    info:
+      enabled: true
+
+    # 指标端点
+    metrics:
+      enabled: true
+
+    # Prometheus 端点
+    prometheus:
+      enabled: true
+
+    # 日志配置端点
+    loggers:
+      enabled: true
+
+    # HTTP 追踪端点
+    httptrace:
+      enabled: true
+
+  # 健康检查配置
+  health:
+    # 数据库健康检查
+    db:
+      enabled: true
+    # Redis 健康检查
+    redis:
+      enabled: true
+    # 默认健康检查
+    defaults:
+      enabled: true
+
+  # 指标配置
+  metrics:
+    # 启用指标
+    enabled: true
+    # 导出配置
+    export:
+      # Prometheus 导出
+      prometheus:
+        enabled: true
+        # 采集间隔
+        step: 1m
+        # 包含描述信息
+        descriptions: true
+    # 分布式指标配置
+    distribution:
+      # 百分位直方图
+      percentiles-histogram:
+        http.server.requests: true
+      # 百分位数配置
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99
+      # SLO（服务等级目标）配置
+      slo:
+        http.server.requests: 100ms,200ms,500ms,1s,2s
+    # 指标标签
+    tags:
+      application: ${spring.application.name}
+      environment: ${ENVIRONMENT:dev}
+      region: ${REGION:default}
+      instance: ${HOSTNAME:${spring.application.name}}
+
+  # 分布式追踪配置
+  tracing:
+    # 采样率配置
+    sampling:
+      # 10% 采样率（生产环境建议值）
+      probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
+
+  # 应用信息配置
+  info:
+    # 环境信息
+    env:
+      enabled: true
+    # Java 信息
+    java:
+      enabled: true
+    # 操作系统信息
+    os:
+      enabled: true
+    # 应用构建信息
+    build:
+      enabled: true
+    # Git 信息
+    git:
+      enabled: true

@@ -1,0 +1,122 @@
+# 认证服务Nacos配置示例
+spring:
+  datasource:
+    # 数据库连接配置 - 使用环境变量
+    url: ${DB_URL:jdbc:mysql://localhost:3306/open_idaas?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    # HikariCP 连接池优化配置
+    hikari:
+      # 连接池最大连接数
+      maximum-pool-size: ${HIKARI_MAX_POOL_SIZE:20}
+      # 连接池最小空闲连接数
+      minimum-idle: ${HIKARI_MIN_IDLE:5}
+      # 连接超时时间（毫秒）
+      connection-timeout: ${HIKARI_CONNECTION_TIMEOUT:30000}
+      # 空闲连接超时时间（毫秒）
+      idle-timeout: ${HIKARI_IDLE_TIMEOUT:600000}
+      # 连接最大生命周期（毫秒）
+      max-lifetime: ${HIKARI_MAX_LIFETIME:1800000}
+      # 连接验证超时时间（毫秒）
+      validation-timeout: ${HIKARI_VALIDATION_TIMEOUT:5000}
+      # 连接泄漏检测阈值（毫秒）
+      leak-detection-threshold: ${HIKARI_LEAK_DETECTION_THRESHOLD:60000}
+      # 连接池名称
+      pool-name: ${HIKARI_POOL_NAME:AuthHikariCP}
+      # 连接初始化 SQL
+      connection-init-sql: ${HIKARI_CONNECTION_INIT_SQL:SELECT 1}
+      # 连接测试查询
+      connection-test-query: ${HIKARI_CONNECTION_TEST_QUERY:SELECT 1}
+      # 自动提交
+      auto-commit: ${HIKARI_AUTO_COMMIT:true}
+      # 只读
+      read-only: ${HIKARI_READ_ONLY:false}
+      # 事务隔离级别
+      transaction-isolation: ${HIKARI_TRANSACTION_ISOLATION:TRANSACTION_READ_COMMITTED}
+      # 连接池自定义属性
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+        netTimeoutForStreamingResults: 0
+  
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        use_sql_comments: true
+    open-in-view: false
+  
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DB:0}
+      timeout: ${REDIS_TIMEOUT:2000ms}
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX_ACTIVE:20}
+          max-idle: ${REDIS_POOL_MAX_IDLE:10}
+          min-idle: ${REDIS_POOL_MIN_IDLE:2}
+          max-wait: ${REDIS_POOL_MAX_WAIT:-1ms}
+
+# JWT配置 - 使用环境变量
+jwt:
+  secret: ${JWT_SECRET:mySecretKey12345678901234567890123456789012}
+  expiration: ${JWT_EXPIRATION:3600}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:86400}
+  issuer: ${JWT_ISSUER:OpenIDaaS}
+
+# 安全配置
+security:
+  oauth2:
+    authorization-server:
+      issuer: ${OAUTH2_ISSUER:http://localhost:8081/auth}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
+    allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS}
+    allowed-headers: ${CORS_ALLOWED_HEADERS:*}
+    allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
+
+# Sentinel流控规则
+sentinel:
+  flow-rules:
+    - resource: "auth-login"
+      count: 5
+      grade: 1
+      limitApp: "default"
+      strategy: 0
+      controlBehavior: 0
+    - resource: "auth-register"
+      count: 2
+      grade: 1
+      limitApp: "default"
+      strategy: 0
+      controlBehavior: 0
+
+# 自定义配置
+app:
+  password:
+    min-length: 8
+    max-length: 20
+    require-special-char: true
+  login:
+    max-fail-count: 5
+    lock-duration-minutes: 30
+  captcha:
+    enabled: true
+    expire-seconds: 300

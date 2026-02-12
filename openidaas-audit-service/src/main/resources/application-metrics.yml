@@ -1,0 +1,89 @@
+management:
+  # 端点配置
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers,httptrace
+      base-path: /actuator
+    enabled-by-default: false
+  
+  # 端点启用状态
+  endpoint:
+    health:
+      enabled: true
+      show-details: always
+      show-components: always
+    info:
+      enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+    loggers:
+      enabled: true
+    httptrace:
+      enabled: true
+  
+  # 健康检查配置
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: true
+    defaults:
+      enabled: true
+    probes:
+      enabled: true
+      liveness-state:
+        enabled: true
+      readiness-state:
+        enabled: true
+  
+  # 指标配置
+  metrics:
+    enabled: true
+    export:
+      prometheus:
+        enabled: true
+        step: 1m
+        descriptions: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99
+      slo:
+        http.server.requests: 100ms,200ms,500ms,1s,2s
+    tags:
+      application: ${spring.application.name}
+      environment: ${ENVIRONMENT:dev}
+  
+  # Tracing配置
+  tracing:
+    sampling:
+      probability: 0.1  # 10%采样率
+  
+  # 审计指标自定义
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+
+# Micrometer自定义指标配置
+micrometer:
+  core:
+    metrics:
+      # 审计日志相关指标
+      audit:
+        logs:
+          total:
+            description: "Total number of audit logs recorded"
+          success:
+            description: "Number of successful audit logs"
+          failed:
+            description: "Number of failed audit logs"
+          async:
+            description: "Number of async audit logs recorded"

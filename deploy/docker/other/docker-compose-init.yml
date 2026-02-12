@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # MySQL 数据库（带初始化）
+  mysql:
+    image: mysql:9.1
+    container_name: openidaas-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_DATABASE: open_idaas
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./db/init_data.sql:/docker-entrypoint-initdb.d/02-init-data.sql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - openidaas-network
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: openidaas-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - openidaas-network
+
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  openidaas-network:
+    driver: bridge

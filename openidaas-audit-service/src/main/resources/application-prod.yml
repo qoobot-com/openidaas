@@ -1,0 +1,113 @@
+# 生产环境配置
+server:
+  port: 8085
+  shutdown: graceful
+
+spring:
+  profiles:
+    active: prod
+
+  # 生产环境数据源
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT:3306}/open_idaas?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
+    hikari:
+      pool-name: AuditHikariCP-Prod
+      minimum-idle: 20
+      maximum-pool-size: 100
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+  # Redis 配置
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      database: ${REDIS_DB:0}
+      lettuce:
+        pool:
+          max-active: 20
+          max-wait: -1ms
+          max-idle: 10
+          min-idle: 5
+        shutdown-timeout: 200ms
+      timeout: 5000ms
+      ssl: false
+
+  # Kafka 配置
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      retries: 5
+      acks: all  # 生产环境要求最高可靠性
+      batch-size: 16384
+      linger-ms: 5
+      buffer-memory: 33554432
+      properties:
+        enable.idempotence: true
+    consumer:
+      group-id: audit-service-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "*"
+        max.poll.records: 100
+        session.timeout.ms: 300000
+        enable.auto.commit: false
+
+# Actuator 配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      environment: prod
+      application: ${spring.application.name}
+      region: ${REGION:default}
+
+# 日志配置
+logging:
+  level:
+    root: WARN
+    com.qoobot.openidaas: INFO
+    com.baomidou.mybatisplus: WARN
+    org.springframework: WARN
+    org.apache.kafka: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-N/A}] %logger{50} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-N/A}] %logger{50} - %msg%n"
+  file:
+    name: /var/log/openidaas/openidaas-audit-service.log
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 1GB
+
+# 审计配置
+audit:
+  enabled: true
+  async: true
+  async-thread-pool-size: 10  # 生产环境增加线程池
+  batch-size: 500  # 生产环境增加批量大小
+  batch-interval-ms: 3000  # 生产环境减少间隔
+
+# 生产环境特性
+spring.devtools.restart.enabled: false
+spring.servlet.multipart.max-file-size: 10MB
+spring.servlet.multipart.max-request-size: 10MB

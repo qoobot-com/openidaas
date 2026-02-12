@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: application-service
+  namespace: openidaas
+  labels:
+    app: application-service
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: application-service
+  template:
+    metadata:
+      labels:
+        app: application-service
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8085"
+    spec:
+      serviceAccountName: openidaas
+      containers:
+      - name: application-service
+        image: openidaas/application-service:1.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8085
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: NACOS_SERVER_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: openidaas-config
+              key: NACOS_SERVER_ADDR
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-password
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: redis-password
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8085
+          initialDelaySeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8085
+          initialDelaySeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: application-service
+  namespace: openidaas
+  labels:
+    app: application-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8085
+    targetPort: 8085
+  selector:
+    app: application-service
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: application-service-hpa
+  namespace: openidaas
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: application-service
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

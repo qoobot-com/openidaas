@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qoobot.openidaas.organization.mapper.DepartmentMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.qoobot.openidaas.organization.entity.Department">
+        <id column="id" property="id"/>
+        <result column="dept_code" property="deptCode"/>
+        <result column="dept_name" property="deptName"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="level_path" property="levelPath"/>
+        <result column="level_depth" property="levelDepth"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="manager_id" property="managerId"/>
+        <result column="description" property="description"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="tenant_id" property="tenantId"/>
+    </resultMap>
+
+    <!-- 根据父部门ID查询子部门列表 -->
+    <select id="selectByParentId" resultMap="BaseResultMap">
+        SELECT *
+        FROM departments
+        WHERE parent_id = #{parentId}
+          AND deleted = 0
+        ORDER BY sort_order ASC, id ASC
+    </select>
+
+    <!-- 根据部门编码查询部门 -->
+    <select id="selectByCode" resultMap="BaseResultMap">
+        SELECT *
+        FROM departments
+        WHERE dept_code = #{deptCode}
+          AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 检查是否存在子部门 -->
+    <select id="countChildren" resultType="int">
+        SELECT COUNT(*)
+        FROM departments
+        WHERE parent_id = #{parentId}
+          AND deleted = 0
+    </select>
+
+</mapper>

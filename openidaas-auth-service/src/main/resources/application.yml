@@ -1,0 +1,149 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /
+  shutdown: graceful
+
+spring:
+  application:
+    name: openidaas-auth-service
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: IDaaS_GROUP
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+        group: IDaaS_GROUP
+        file-extension: yml
+
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:open_idaas}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+    hikari:
+      pool-name: AuthHikariCP
+      minimum-idle: 10
+      maximum-pool-size: 50
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+  # Redis配置
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DB:0}
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: -1ms
+          max-idle: 8
+          min-idle: 0
+      timeout: 3000ms
+
+  # Security配置
+  security:
+    oauth2:
+      client:
+        registration:
+          # GitHub OAuth2
+          github:
+            client-id: ${GITHUB_CLIENT_ID:your-github-client-id}
+            client-secret: ${GITHUB_CLIENT_SECRET:your-github-client-secret}
+            scope: read:user,user:email
+
+          # Google OIDC
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
+            scope: openid,profile,email
+
+          # 微信 OAuth2
+          wechat:
+            client-id: ${WECHAT_APP_ID:your-wechat-app-id}
+            client-secret: ${WECHAT_APP_SECRET:your-wechat-app-secret}
+            authorization-grant-type: authorization_code
+            redirect-uri: http://localhost:8082/login/oauth2/code/wechat
+            scope: snsapi_login
+
+          # Microsoft OIDC
+          microsoft:
+            client-id: ${MICROSOFT_CLIENT_ID:your-microsoft-client-id}
+            client-secret: ${MICROSOFT_CLIENT_SECRET:your-microsoft-client-secret}
+            scope: openid,profile,email
+
+        provider:
+          github:
+            user-name-attribute: login
+          google:
+            user-name-attribute: email
+          microsoft:
+            user-name-attribute: email
+
+  # Thymeleaf配置
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+
+  # MVC配置
+  mvc:
+    view:
+      prefix: classpath:/templates/
+      suffix: .html
+
+# MyBatis-Plus配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.qoobot.openidaas.user.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas: DEBUG
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-N/A}] %logger{36} - %msg%n'
+
+# 应用配置
+app:
+  jwt:
+    secret: ${JWT_SECRET:your-secret-key-change-this-in-production}
+    access-token-validity: 3600
+    refresh-token-validity: 2592000
+  mfa:
+    enabled: true
+    totp:
+      issuer: IDaaS
+      digits: 6
+      period: 30
+    sms:
+      enabled: true
+      expire-minutes: 5
+    email:
+      enabled: true
+      expire-minutes: 15

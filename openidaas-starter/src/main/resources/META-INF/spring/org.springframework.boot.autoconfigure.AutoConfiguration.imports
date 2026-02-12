@@ -1,6 +1,0 @@
-com.qoobot.openidaas.starter.autoconfigure.OpenIDaaSAutoConfiguration
-com.qoobot.openidaas.starter.autoconfigure.OpenIDaaSAuthAutoConfiguration
-com.qoobot.openidaas.starter.autoconfigure.OpenIDaaSSecurityAutoConfiguration
-com.qoobot.openidaas.starter.autoconfigure.OpenIDaaSTenantAutoConfiguration
-com.qoobot.openidaas.starter.autoconfigure.OpenIDaaSUserAutoConfiguration
-com.qoobot.openidaas.starter.autoconfigure.OpenIDaaSGatewayAutoConfiguration

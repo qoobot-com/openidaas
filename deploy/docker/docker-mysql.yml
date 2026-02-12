@@ -1,0 +1,40 @@
+services:
+  mysql:
+    image: 3bpds0vd1gewcx06p4.xuanyuan.run/library/mysql:8.0
+    container_name: openidaas-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: open_idaas
+      MYSQL_USER: open
+      MYSQL_PASSWORD: open
+      TZ: Asia/Shanghai
+      MYSQL_UNIX_PORT: /var/run/mysqld/mysqld.sock
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/mysql_data:/var/lib/mysql
+      # 移除 my.cnf 挂载以避免权限警告
+      - ../db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ../db/nacos-schema.sql:/docker-entrypoint-initdb.d/03-nacos-schema.sql:ro
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-time-zone=+8:00
+      --skip-name-resolve
+      --explicit_defaults_for_timestamp=true
+      --sql-mode=STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - openidaas-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  openidaas-network:
+    driver: bridge

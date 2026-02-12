@@ -1,0 +1,157 @@
+# OpenIDaaS Prometheus 配置文件
+# 用于监控所有 OpenIDaaS 微服务
+
+global:
+  # 采集间隔
+  scrape_interval: 15s
+  # 规则评估间隔
+  evaluation_interval: 15s
+  # 外部标签
+  external_labels:
+    cluster: 'openidaas-cluster'
+    environment: '${ENVIRONMENT:production}'
+    datacenter: '${DATACENTER:default}'
+
+# 告警规则文件
+rule_files:
+  - 'alert_rules/*.yml'
+
+# 监控目标配置
+scrape_configs:
+  # Prometheus 自监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+          component: 'monitoring'
+
+  # 网关服务
+  - job_name: 'openidaas-gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['openidaas-gateway:8080']
+        labels:
+          service: 'gateway'
+          component: 'gateway'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # 认证服务
+  - job_name: 'openidaas-auth-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['openidaas-auth-service:8082']
+        labels:
+          service: 'auth-service'
+          component: 'auth'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # 用户服务
+  - job_name: 'openidaas-user-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['openidaas-user-service:8081']
+        labels:
+          service: 'user-service'
+          component: 'user'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # 组织服务
+  - job_name: 'openidaas-organization-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['openidaas-organization-service:8083']
+        labels:
+          service: 'organization-service'
+          component: 'organization'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # 角色服务
+  - job_name: 'openidaas-role-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['openidaas-role-service:8084']
+        labels:
+          service: 'role-service'
+          component: 'role'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # 应用服务
+  - job_name: 'openidaas-application-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['openidaas-application-service:8086']
+        labels:
+          service: 'application-service'
+          component: 'application'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # 审计服务
+  - job_name: 'openidaas-audit-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['openidaas-audit-service:8085']
+        labels:
+          service: 'audit-service'
+          component: 'audit'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # 授权服务
+  - job_name: 'openidaas-authorization-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['openidaas-authorization-service:8087']
+        labels:
+          service: 'authorization-service'
+          component: 'authorization'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Kubernetes 服务发现（用于 K8s 环境）
+  - job_name: 'kubernetes-pods'
+    metrics_path: '/actuator/prometheus'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - openidaas
+    relabel_configs:
+      # 保留有 app 标签的 Pod
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: .+
+        action: keep
+      # 设置 pod_name 标签
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod_name
+      # 设置 app 标签
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        target_label: app
+      # 设置 namespace 标签
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      # 设置 service 标签
+      - source_labels: [__meta_kubernetes_pod_label_service]
+        target_label: service
+
+  # Node Exporter（服务器指标）
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'node-exporter'
+          component: 'system'
+
+  # Alertmanager
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
+        labels:
+          service: 'alertmanager'
+          component: 'monitoring'

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qoobot.openidaas.audit.mapper.AuditLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.qoobot.openidaas.audit.entity.AuditLog">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="operation_type" property="operationType" jdbcType="VARCHAR"/>
+        <result column="operation_desc" property="operationDesc" jdbcType="VARCHAR"/>
+        <result column="module" property="module" jdbcType="VARCHAR"/>
+        <result column="sub_module" property="subModule" jdbcType="VARCHAR"/>
+        <result column="target_type" property="targetType" jdbcType="VARCHAR"/>
+        <result column="target_id" property="targetId" jdbcType="BIGINT"/>
+        <result column="target_name" property="targetName" jdbcType="VARCHAR"/>
+        <result column="request_url" property="requestUrl" jdbcType="VARCHAR"/>
+        <result column="request_method" property="requestMethod" jdbcType="VARCHAR"/>
+        <result column="request_params" property="requestParams" jdbcType="LONGVARCHAR"/>
+        <result column="response_result" property="responseResult" jdbcType="LONGVARCHAR"/>
+        <result column="operator_id" property="operatorId" jdbcType="BIGINT"/>
+        <result column="operator_name" property="operatorName" jdbcType="VARCHAR"/>
+        <result column="operator_ip" property="operatorIp" jdbcType="VARCHAR"/>
+        <result column="user_agent" property="userAgent" jdbcType="LONGVARCHAR"/>
+        <result column="operation_time" property="operationTime" jdbcType="TIMESTAMP"/>
+        <result column="execution_time" property="executionTime" jdbcType="BIGINT"/>
+        <result column="result" property="result" jdbcType="VARCHAR"/>
+        <result column="error_message" property="errorMessage" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="BIGINT"/>
+        <result column="app_id" property="appId" jdbcType="BIGINT"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="selectByOperationType" resultMap="BaseResultMap">
+        SELECT * FROM audit_logs
+        WHERE operation_type = #{operationType}
+        ORDER BY operation_time DESC
+    </select>
+
+    <select id="selectByModule" resultMap="BaseResultMap">
+        SELECT * FROM audit_logs
+        WHERE module = #{module}
+        ORDER BY operation_time DESC
+    </select>
+
+    <select id="selectByOperatorId" resultMap="BaseResultMap">
+        SELECT * FROM audit_logs
+        WHERE operator_id = #{operatorId}
+        ORDER BY operation_time DESC
+    </select>
+
+    <select id="selectByTenantId" resultMap="BaseResultMap">
+        SELECT * FROM audit_logs
+        WHERE tenant_id = #{tenantId}
+        ORDER BY operation_time DESC
+    </select>
+
+    <select id="selectByAppId" resultMap="BaseResultMap">
+        SELECT * FROM audit_logs
+        WHERE app_id = #{appId}
+        ORDER BY operation_time DESC
+    </select>
+
+    <select id="selectByResult" resultMap="BaseResultMap">
+        SELECT * FROM audit_logs
+        WHERE result = #{result}
+        ORDER BY operation_time DESC
+    </select>
+
+    <select id="selectByTimeRange" resultMap="BaseResultMap">
+        SELECT * FROM audit_logs
+        WHERE operation_time BETWEEN #{startTime} AND #{endTime}
+        ORDER BY operation_time DESC
+    </select>
+
+    <select id="selectRecentLogs" resultMap="BaseResultMap">
+        SELECT * FROM audit_logs
+        ORDER BY operation_time DESC
+    </select>
+
+    <select id="selectFailedLogs" resultMap="BaseResultMap">
+        SELECT * FROM audit_logs
+        WHERE result = 'FAILURE'
+        ORDER BY operation_time DESC
+    </select>
+
+</mapper>

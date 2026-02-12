@@ -1,0 +1,124 @@
+# SAML 2.0 配置示例
+# 用于企业级单点登录（SSO）
+#
+# 使用说明：
+# 1. 将此配置上传到 Nacos 配置中心
+# 2. 设置 app.saml2.enabled=true 启用 SAML 2.0
+# 3. 根据实际的 Identity Provider (IdP) 配置修改相关参数
+
+app:
+  saml2:
+    # 是否启用 SAML 2.0（默认为 false，需要时手动启用）
+    enabled: false
+
+    # Service Provider (SP) 配置
+    sp:
+      # SP 实体 ID（唯一标识）
+      entity-id: https://openidaas.example.com/saml2/metadata
+
+      # SP 的基础 URL（用于生成回调地址）
+      base-url: http://localhost:8082
+
+      # 断言消费者服务地址（IdP 认证成功后的回调地址）
+      assertion-consumer-service-location: /saml2/sso/{registrationId}
+
+      # 单点登出服务地址
+      single-logout-service-location: /saml2/logout/{registrationId}
+
+      # SAML 消息绑定方式（POST 或 REDIRECT）
+      message-binding: POST
+
+    # Identity Provider (IdP) 配置
+    idp:
+      # IdP 实体 ID
+      entity-id: https://idp.example.com/adfs
+
+      # IdP 的 SSO 登录地址
+      sso-url: https://idp.example.com/adfs/saml2/idpinitiatedsignon.aspx
+
+      # IdP 的单点登出地址（可选）
+      slo-url: https://idp.example.com/adfs/saml2/slo
+
+      # IdP 元数据 URL（用于自动获取 IdP 配置）
+      metadata-url: https://idp.example.com/adfs/federationmetadata/2007-06/federationmetadata.xml
+
+    # 证书配置
+    credentials:
+      # SP 签名证书（用于对发送给 IdP 的消息签名）
+      signing:
+        # 证书文件路径（keystore 格式）
+        keystore-path: classpath:saml/sp-keystore.jks
+        keystore-password: changeit
+        key-password: changeit
+        key-alias: sp-key
+
+      # SP 加密证书（用于加密发送给 IdP 的断言）
+      encryption:
+        keystore-path: classpath:saml/sp-keystore.jks
+        keystore-password: changeit
+        key-password: changeit
+        key-alias: sp-key
+
+      # IdP 验证证书（用于验证 IdP 发送的消息签名）
+      verification:
+        # 可以使用 keystore 或 PEM 证书
+        keystore-path: classpath:saml/idp-keystore.jks
+        keystore-password: changeit
+        # 或使用 PEM 格式证书
+        # certificate-path: classpath:saml/idp-cert.pem
+
+      # IdP 解密证书（用于解密 IdP 发送的加密断言）
+      decryption:
+        keystore-path: classpath:saml/idp-keystore.jks
+        keystore-password: changeit
+        key-password: changeit
+        key-alias: idp-key
+
+# ============ 常见 Identity Provider 配置示例 ============
+
+# 1. Microsoft ADFS 示例
+# app.saml2.idp:
+#   entity-id: https://adfs.example.com/adfs/services/trust
+#   sso-url: https://adfs.example.com/adfs/ls/
+#   metadata-url: https://adfs.example.com/FederationMetadata/2007-06/FederationMetadata.xml
+
+# 2. Okta 示例
+# app.saml2.idp:
+#   entity-id: https://dev-123456.okta.com/app/saml2example
+#   sso-url: https://dev-123456.okta.com/app/saml2example/sso/saml
+#   metadata-url: https://dev-123456.okta.com/app/saml2example/sso/saml/metadata
+
+# 3. Keycloak 示例
+# app.saml2.idp:
+#   entity-id: https://keycloak.example.com/realms/myrealm
+#   sso-url: https://keycloak.example.com/realms/myrealm/protocol/saml
+#   metadata-url: https://keycloak.example.com/realms/myrealm/protocol/saml/descriptor
+
+# 4. Ping Identity 示例
+# app.saml2.idp:
+#   entity-id: https://ping.example.com/saml20/idp/metadata
+#   sso-url: https://ping.example.com/saml20/idp/sso
+#   metadata-url: https://ping.example.com/saml20/idp/metadata
+
+# ============ 证书生成说明 ============
+#
+# 生成 SP 签名和加密证书的命令：
+# keytool -genkeypair -alias sp-key -keyalg RSA -keysize 2048 \
+#   -keystore sp-keystore.jks -storepass changeit -keypass changeit \
+#   -dname "CN=SP,O=Organization,C=US"
+#
+# 导出 SP 证书供 IdP 使用：
+# keytool -exportcert -alias sp-key -keystore sp-keystore.jks \
+#   -file sp-cert.pem -storepass changeit
+#
+# 从 IdP 导入验证证书：
+# keytool -importcert -alias idp-cert -keystore idp-keystore.jks \
+#   -file idp-cert.pem -storepass changeit -noprompt
+#
+# ============ 注意事项 ============
+# 1. 确保 entityId 和回调 URL 与 IdP 配置完全一致
+# 2. 证书必须正确配置，否则签名验证会失败
+# 3. 生产环境应使用 HTTPS 协议
+# 4. 测试时可以暂时禁用 SAML 2.0：app.saml2.enabled=false
+# 5. 证书的有效期应足够长（建议至少 1 年）
+# 6. 密钥文件应妥善保管，不要提交到代码仓库

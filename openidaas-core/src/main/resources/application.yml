@@ -1,5 +1,0 @@
-openidaas:
-  core:
-    # 核心模块配置
-    enable-auditing: true
-    enable-caching: true

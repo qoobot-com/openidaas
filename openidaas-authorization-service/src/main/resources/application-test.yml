@@ -1,0 +1,68 @@
+# 测试环境配置
+server:
+  port: 8087
+  shutdown: graceful
+
+spring:
+  profiles:
+    active: test
+
+  # 测试环境数据源
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:open_idaas_test}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:test_user}
+    password: ${DB_PASSWORD:test_password}
+    hikari:
+      pool-name: AuthorizationHikariCP-Test
+      minimum-idle: 10
+      maximum-pool-size: 30
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+  # Redis 配置
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DB:1}
+      lettuce:
+        pool:
+          max-active: 10
+          max-wait: -1ms
+          max-idle: 10
+          min-idle: 2
+      timeout: 3000ms
+
+# Actuator 配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      environment: test
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas: DEBUG
+    com.baomidou.mybatisplus: INFO
+    org.springframework.cloud: INFO
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-N/A}] %logger{36} - %msg%n'
+  file:
+    name: logs/openidaas-authorization-service-test.log
+
+# 测试环境特性
+spring.devtools.restart.enabled: false

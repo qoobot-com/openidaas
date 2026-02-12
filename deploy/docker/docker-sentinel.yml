@@ -1,0 +1,21 @@
+services:
+  sentinel:
+    image: 3bpds0vd1gewcx06p4.xuanyuan.run/leifengyang/sentinel:1.8.2
+    container_name: openidaas-sentinel
+    restart: unless-stopped
+    ports:
+      - "8858:8858"
+    environment:
+      - SERVER_PORT=8858
+      - PROJECT_NAME=sentinel-dashboard
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8858"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - openidaas-network
+
+networks:
+  openidaas-network:
+    driver: bridge

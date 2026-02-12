@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: openidaas-auth-service
+
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  redis:
+    host: localhost
+    port: 6379
+    database: 15
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+
+app:
+  jwt:
+    secret: test-secret-key-for-jwt-token-generation-validation-minimum-256-bits
+    access-token-validity: 3600
+    refresh-token-validity: 2592000
+  mfa:
+    issuer: IDaaS-Test
+
+logging:
+  level:
+    com.qoobot.openidaas.auth: DEBUG
+    org.springframework.test: INFO

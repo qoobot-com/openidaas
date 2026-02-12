@@ -1,0 +1,23 @@
+services:
+  nginx:
+    image: 3bpds0vd1gewcx06p4.xuanyuan.run/library/nginx:alpine
+    container_name: openidaas-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf/nginx-minimal.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+      - ./nginx/logs:/var/log/nginx
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - openidaas-network
+
+networks:
+  openidaas-network:
+    driver: bridge

@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: role-service
+  namespace: openidaas
+  labels:
+    app: role-service
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: role-service
+  template:
+    metadata:
+      labels:
+        app: role-service
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8084"
+    spec:
+      serviceAccountName: openidaas
+      containers:
+      - name: role-service
+        image: openidaas/role-service:1.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8084
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: NACOS_SERVER_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: openidaas-config
+              key: NACOS_SERVER_ADDR
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-password
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: redis-password
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8084
+          initialDelaySeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8084
+          initialDelaySeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: role-service
+  namespace: openidaas
+  labels:
+    app: role-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8084
+    targetPort: 8084
+  selector:
+    app: role-service
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: role-service-hpa
+  namespace: openidaas
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: role-service
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

@@ -1,0 +1,78 @@
+# OpenFeign 通用配置
+spring:
+  cloud:
+    openfeign:
+      # 客户端配置
+      client:
+        config:
+          # 默认配置
+          default:
+            # 连接超时（毫秒）
+            connectTimeout: 5000
+            # 读取超时（毫秒）
+            readTimeout: 10000
+            # 日志级别：NONE, BASIC, HEADERS, FULL
+            loggerLevel: full
+          # 针对特定服务的配置
+          user-service:
+            connectTimeout: 3000
+            readTimeout: 5000
+          organization-service:
+            connectTimeout: 3000
+            readTimeout: 5000
+          role-service:
+            connectTimeout: 3000
+            readTimeout: 5000
+          audit-service:
+            connectTimeout: 2000
+            readTimeout: 5000
+          application-service:
+            connectTimeout: 3000
+            readTimeout: 5000
+
+      # 启用压缩
+      compression:
+        request:
+          enabled: true
+          # 支持的 MIME 类型
+          mime-types:
+            - text/xml
+            - application/xml
+            - application/json
+          # 最小压缩请求大小（字节）
+          min-request-size: 2048
+        response:
+          enabled: true
+
+      # 启用 Hystrix/Resilience4j 熔断
+      circuitbreaker:
+        enabled: true
+
+      # OkHttp 客户端（性能更好）
+      okhttp:
+        enabled: true
+
+      # 连接池配置
+      httpclient:
+        # 最大连接数
+        max-connections: 200
+        # 每个路由的最大连接数
+        max-connections-per-route: 50
+        # 连接超时
+        connection-timeout: 5000
+        # 读取超时
+        read-timeout: 10000
+
+# Feign 日志配置
+logging:
+  level:
+    com.qoobot.openidaas.common.feign: DEBUG
+    feign: DEBUG
+
+# Sentinel 流量控制
+feign:
+  sentinel:
+    # 启用 Sentinel
+    enabled: true
+    # 降级策略
+    eager: true

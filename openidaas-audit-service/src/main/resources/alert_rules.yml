@@ -1,0 +1,128 @@
+# Prometheus告警规则配置
+# 针对审计日志服务的告警规则
+
+groups:
+  - name: audit_service_alerts
+    interval: 30s
+    rules:
+      # 服务可用性告警
+      - alert: AuditServiceDown
+        expr: up{job="audit-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: audit-service
+        annotations:
+          summary: "审计服务宕机"
+          description: "审计日志服务已宕机超过1分钟"
+
+      # 错误率告警
+      - alert: HighErrorRate
+        expr: |
+          rate(audit_logs_failed[5m]) / rate(audit_logs_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: audit-service
+        annotations:
+          summary: "审计服务错误率过高"
+          description: "审计服务错误率超过10%，当前错误率: {{ $value | humanizePercentage }}"
+
+      # 慢查询告警
+      - alert: SlowDatabaseQueries
+        expr: |
+          histogram_quantile(0.99, rate(audit_log_query_duration_seconds_bucket[5m])) > 2
+        for: 10m
+        labels:
+          severity: warning
+          component: audit-service
+        annotations:
+          summary: "数据库查询缓慢"
+          description: "99%的数据库查询耗时超过2秒，当前P99: {{ $value }}s"
+
+      # 请求延迟告警
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job="audit-service"}[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: audit-service
+        annotations:
+          summary: "响应时间过高"
+          description: "95%的请求响应时间超过1秒，当前P95: {{ $value }}s"
+
+      # 审计日志记录失败告警
+      - alert: AuditLogRecordingFailure
+        expr: |
+          rate(audit_logs_failed[1m]) > 10
+        for: 2m
+        labels:
+          severity: critical
+          component: audit-service
+        annotations:
+          summary: "审计日志记录失败"
+          description: "审计日志记录失败率过高，当前失败数: {{ $value }} logs/min"
+
+      # JVM内存告警
+      - alert: HighMemoryUsage
+        expr: |
+          jvm_memory_used_bytes{area="heap",job="audit-service"} / jvm_memory_max_bytes{area="heap",job="audit-service"} > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: audit-service
+        annotations:
+          summary: "JVM堆内存使用率过高"
+          description: "JVM堆内存使用率超过80%，当前使用率: {{ $value | humanizePercentage }}"
+
+      # 磁盘空间告警
+      - alert: DiskSpaceLow
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: audit-service
+        annotations:
+          summary: "磁盘空间不足"
+          description: "根分区可用空间低于10%，当前可用率: {{ $value | humanizePercentage }}"
+
+  - name: audit_business_alerts
+    interval: 1m
+    rules:
+      # 审计日志量突增告警
+      - alert: AuditLogsSpike
+        expr: |
+          rate(audit_logs_total[5m]) > 2 * rate(audit_logs_total[30m] offset 5m)
+        for: 2m
+        labels:
+          severity: warning
+          component: audit-service
+        annotations:
+          summary: "审计日志量突增"
+          description: "审计日志记录量是过去的2倍以上，可能存在异常活动"
+
+      # 未处理安全事件告警
+      - alert: UnhandledSecurityEvents
+        expr: |
+          audit_security_events_unhandled > 0
+        for: 10m
+        labels:
+          severity: warning
+          component: audit-service
+        annotations:
+          summary: "存在未处理的安全事件"
+          description: "有{{ $value }}个安全事件未处理超过10分钟"
+
+      # 特定操作失败告警
+      - alert: HighFailureRateForOperation
+        expr: |
+          rate(audit_logs_by_operation_type_failed[5m]) / rate(audit_logs_by_operation_type_total[5m]) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+          component: audit-service
+        annotations:
+          summary: "特定操作失败率过高"
+          description: "操作类型 {{ $labels.operation_type }} 失败率超过20%"

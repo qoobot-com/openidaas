@@ -1,0 +1,399 @@
+# OpenIDaaS 告警规则配置
+
+groups:
+  # ==================== 服务可用性告警 ====================
+  - name: service_availability
+    interval: 30s
+    rules:
+      # 服务宕机告警
+      - alert: ServiceDown
+        expr: up{job=~"openidaas.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: service
+        annotations:
+          summary: "服务宕机"
+          description: "服务 {{ $labels.job }} 已宕机超过1分钟，请立即检查服务状态"
+
+      # 服务实例部分不可用告警
+      - alert: ServiceInstanceDown
+        expr: up{job=~"openidaas.*"} < 1
+        for: 5m
+        labels:
+          severity: warning
+          component: service
+        annotations:
+          summary: "服务实例不可用"
+          description: "服务 {{ $labels.job }} 部分实例不可用，当前可用实例数: {{ $value }}"
+
+  # ==================== 应用性能告警 ====================
+  - name: application_performance
+    interval: 30s
+    rules:
+      # 高错误率告警
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (service)
+          /
+          sum(rate(http_server_requests_seconds_count[5m])) by (service)
+          > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "服务错误率过高"
+          description: "服务 {{ $labels.service }} 错误率超过5%，当前错误率: {{ $value | humanizePercentage }}"
+
+      # 响应时间告警
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(http_server_requests_seconds_bucket{service=~".*"}[5m])) by (service, le)
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "响应时间过高"
+          description: "服务 {{ $labels.service }} 95%请求响应时间超过1秒，当前P95: {{ $value }}s"
+
+      # P99 响应时间告警
+      - alert: HighP99ResponseTime
+        expr: |
+          histogram_quantile(0.99, 
+            sum(rate(http_server_requests_seconds_bucket{service=~".*"}[5m])) by (service, le)
+          ) > 2
+        for: 5m
+        labels:
+          severity: critical
+          component: application
+        annotations:
+          summary: "P99响应时间过高"
+          description: "服务 {{ $labels.service }} 99%请求响应时间超过2秒，当前P99: {{ $value }}s"
+
+      # 慢请求告警
+      - alert: SlowRequests
+        expr: |
+          rate(http_server_requests_seconds_count{le="+Inf"}[5m])
+          -
+          rate(http_server_requests_seconds_count{le="1"}[5m])
+          > 10
+        for: 10m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "慢请求过多"
+          description: "服务 {{ $labels.service }} 慢请求数超过10个/秒"
+
+      # 请求量突增告警
+      - alert: RequestSpike
+        expr: |
+          rate(http_server_requests_seconds_count[5m])
+          > 2 * rate(http_server_requests_seconds_count[30m] offset 5m)
+        for: 5m
+        labels:
+          severity: warning
+          component: application
+        annotations:
+          summary: "请求量突增"
+          description: "服务 {{ $labels.service }} 请求量是过去的2倍以上，当前QPS: {{ $value }}"
+
+  # ==================== JVM 告警 ====================
+  - name: jvm_metrics
+    interval: 1m
+    rules:
+      # JVM 堆内存告警
+      - alert: HighHeapMemoryUsage
+        expr: |
+          jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: jvm
+        annotations:
+          summary: "JVM 堆内存使用率过高"
+          description: "服务 {{ $labels.service }} JVM 堆内存使用率超过80%，当前使用率: {{ $value | humanizePercentage }}"
+
+      # JVM 堆内存严重告警
+      - alert: CriticalHeapMemoryUsage
+        expr: |
+          jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.9
+        for: 2m
+        labels:
+          severity: critical
+          component: jvm
+        annotations:
+          summary: "JVM 堆内存使用率严重"
+          description: "服务 {{ $labels.service }} JVM 堆内存使用率超过90%，可能发生 OOM"
+
+      # JVM 非堆内存告警
+      - alert: HighNonHeapMemoryUsage
+        expr: |
+          jvm_memory_used_bytes{area="nonheap"} / jvm_memory_max_bytes{area="nonheap"} > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: jvm
+        annotations:
+          summary: "JVM 非堆内存使用率过高"
+          description: "服务 {{ $labels.service }} JVM 非堆内存使用率超过80%"
+
+      # GC 频率告警
+      - alert: HighGCRate
+        expr: |
+          rate(jvm_gc_pause_seconds_count[5m]) > 1
+        for: 10m
+        labels:
+          severity: warning
+          component: jvm
+        annotations:
+          summary: "GC 频率过高"
+          description: "服务 {{ $labels.service }} GC 频率超过1次/秒，当前频率: {{ $value }}/秒"
+
+      # GC 时间告警
+      - alert: HighGCTime
+        expr: |
+          rate(jvm_gc_pause_seconds_sum[5m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          component: jvm
+        annotations:
+          summary: "GC 时间过长"
+          description: "服务 {{ $labels.service }} GC 时间占比超过10%，当前占比: {{ $value | humanizePercentage }}"
+
+      # 线程数告警
+      - alert: HighThreadCount
+        expr: |
+          jvm_threads_live_threads > 500
+        for: 5m
+        labels:
+          severity: warning
+          component: jvm
+        annotations:
+          summary: "线程数过多"
+          description: "服务 {{ $labels.service }} 活跃线程数超过500个，当前线程数: {{ $value }}"
+
+  # ==================== 数据库告警 ====================
+  - name: database_metrics
+    interval: 1m
+    rules:
+      # 数据库连接池告警
+      - alert: HighDatabaseConnectionUsage
+        expr: |
+          hikaricp_connections_active / hikaricp_connections_max > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "数据库连接池使用率过高"
+          description: "服务 {{ $labels.service }} 数据库连接池使用率超过80%，当前使用率: {{ $value | humanizePercentage }}"
+
+      # 数据库连接池严重告警
+      - alert: CriticalDatabaseConnectionUsage
+        expr: |
+          hikaricp_connections_active / hikaricp_connections_max > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "数据库连接池使用率严重"
+          description: "服务 {{ $labels.service }} 数据库连接池使用率超过95%"
+
+      # 数据库连接等待告警
+      - alert: DatabaseConnectionWaiting
+        expr: |
+          hikaricp_connections_pending > 10
+        for: 2m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "数据库连接等待过多"
+          description: "服务 {{ $labels.service }} 数据库连接等待数超过10个，当前等待数: {{ $value }}"
+
+      # 数据库连接失败告警
+      - alert: DatabaseConnectionFailure
+        expr: |
+          rate(hikaricp_connections_timeout_total[5m]) > 0
+        for: 2m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "数据库连接失败"
+          description: "服务 {{ $labels.service }} 数据库连接失败率: {{ $value }}/秒"
+
+  # ==================== Redis 告警 ====================
+  - name: redis_metrics
+    interval: 1m
+    rules:
+      # Redis 连接池告警
+      - alert: HighRedisConnectionUsage
+        expr: |
+          lettuce_connections_active / lettuce_connections_max > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "Redis 连接池使用率过高"
+          description: "服务 {{ $labels.service }} Redis 连接池使用率超过80%，当前使用率: {{ $value | humanizePercentage }}"
+
+      # Redis 命令失败告警
+      - alert: RedisCommandFailure
+        expr: |
+          rate(lettuce_command failures_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "Redis 命令失败"
+          description: "服务 {{ $labels.service }} Redis 命令失败率: {{ $value }}/秒"
+
+  # ==================== 系统资源告警 ====================
+  - name: system_metrics
+    interval: 1m
+    rules:
+      # CPU 使用率告警
+      - alert: HighCPUUsage
+        expr: |
+          100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "CPU 使用率过高"
+          description: "实例 {{ $labels.instance }} CPU 使用率超过80%，当前使用率: {{ $value }}%"
+
+      # CPU 使用率严重告警
+      - alert: CriticalCPUUsage
+        expr: |
+          100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 2m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "CPU 使用率严重"
+          description: "实例 {{ $labels.instance }} CPU 使用率超过90%，当前使用率: {{ $value }}%"
+
+      # 内存使用率告警
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "内存使用率过高"
+          description: "实例 {{ $labels.instance }} 内存使用率超过80%，当前使用率: {{ $value }}%"
+
+      # 内存使用率严重告警
+      - alert: CriticalMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 2m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "内存使用率严重"
+          description: "实例 {{ $labels.instance }} 内存使用率超过90%，当前使用率: {{ $value }}%"
+
+      # 磁盘空间告警
+      - alert: LowDiskSpace
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 20
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "磁盘空间不足"
+          description: "实例 {{ $labels.instance }} 磁盘可用空间低于20%，当前可用率: {{ $value }}%"
+
+      # 磁盘空间严重告警
+      - alert: CriticalLowDiskSpace
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 2m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "磁盘空间严重不足"
+          description: "实例 {{ $labels.instance }} 磁盘可用空间低于10%，当前可用率: {{ $value }}%"
+
+      # 磁盘 IO 告警
+      - alert: HighDiskIO
+        expr: |
+          rate(node_disk_io_time_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "磁盘 IO 过高"
+          description: "实例 {{ $labels.instance }} 磁盘 IO 使用率超过80%，当前使用率: {{ $value | humanizePercentage }}"
+
+  # ==================== 业务指标告警 ====================
+  - name: business_metrics
+    interval: 1m
+    rules:
+      # 登录失败率告警
+      - alert: HighLoginFailureRate
+        expr: |
+          rate(login_requests_failed_total[5m]) / rate(login_requests_total[5m]) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "登录失败率过高"
+          description: "登录失败率超过20%，当前失败率: {{ $value | humanizePercentage }}"
+
+      # 认证服务告警
+      - alert: HighAuthFailureRate
+        expr: |
+          rate(auth_requests_failed_total[5m]) / rate(auth_requests_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          component: business
+        annotations:
+          summary: "认证失败率过高"
+          description: "认证失败率超过10%，当前失败率: {{ $value | humanizePercentage }}"
+
+      # 审计日志丢失告警
+      - alert: AuditLogLoss
+        expr: |
+          rate(audit_logs_failed[1m]) > 5
+        for: 5m
+        labels:
+          severity: critical
+          component: business
+        annotations:
+          summary: "审计日志丢失"
+          description: "审计日志丢失率: {{ $value }}/秒，请检查审计服务状态"
+
+      # 权限检查失败告警
+      - alert: HighAuthorizationFailureRate
+        expr: |
+          rate(authorization_checks_failed_total[5m]) / rate(authorization_checks_total[5m]) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "权限检查失败率过高"
+          description: "权限检查失败率超过5%，当前失败率: {{ $value | humanizePercentage }}"

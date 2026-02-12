@@ -1,0 +1,26 @@
+[
+  {
+    "resource": "openidaas-user-service",
+    "grade": 0,
+    "count": 500,
+    "timeWindow": 10,
+    "minRequestAmount": 5,
+    "statIntervalMs": 1000
+  },
+  {
+    "resource": "openidaas-auth-service",
+    "grade": 1,
+    "count": 0.5,
+    "timeWindow": 10,
+    "minRequestAmount": 5,
+    "statIntervalMs": 1000
+  },
+  {
+    "resource": "openidaas-organization-service",
+    "grade": 0,
+    "count": 1000,
+    "timeWindow": 10,
+    "minRequestAmount": 5,
+    "statIntervalMs": 1000
+  }
+]

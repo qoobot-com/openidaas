@@ -1,0 +1,179 @@
+# 开发环境配置
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  profiles:
+    active: dev
+
+  cloud:
+    gateway:
+      routes:
+        # ==================== v1 版本路由 ====================
+
+        # 认证服务 v1
+        - id: auth-service-v1
+          uri: lb://openidaas-auth-service
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - StripPrefix=2
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
+
+        # 用户服务 v1
+        - id: user-service-v1
+          uri: lb://openidaas-user-service
+          predicates:
+            - Path=/api/v1/users/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthentication
+              args:
+                requireAuth: true
+
+        # 组织服务 v1
+        - id: organization-service-v1
+          uri: lb://openidaas-organization-service
+          predicates:
+            - Path=/api/v1/organizations/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthentication
+              args:
+                requireAuth: true
+
+        # 角色服务 v1
+        - id: role-service-v1
+          uri: lb://openidaas-role-service
+          predicates:
+            - Path=/api/v1/roles/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthentication
+              args:
+                requireAuth: true
+
+        # 应用服务 v1
+        - id: application-service-v1
+          uri: lb://openidaas-application-service
+          predicates:
+            - Path=/api/v1/applications/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthentication
+              args:
+                requireAuth: true
+
+        # 审计服务 v1
+        - id: audit-service-v1
+          uri: lb://openidaas-audit-service
+          predicates:
+            - Path=/api/v1/audit/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthentication
+              args:
+                requireAuth: true
+
+        # ==================== 旧路径兼容路由 ====================
+
+        # 旧路径重定向到 v1
+        - id: legacy-auth-redirect
+          uri: lb://openidaas-auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - RewritePath=/api/auth/(?<segment>.*), /api/v1/auth/${segment}
+
+        - id: legacy-users-redirect
+          uri: lb://openidaas-user-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - RewritePath=/api/users/(?<segment>.*), /api/v1/users/${segment}
+
+        - id: legacy-organizations-redirect
+          uri: lb://openidaas-organization-service
+          predicates:
+            - Path=/api/organizations/**
+          filters:
+            - RewritePath=/api/organizations/(?<segment>.*), /api/v1/organizations/${segment}
+
+        - id: legacy-roles-redirect
+          uri: lb://openidaas-role-service
+          predicates:
+            - Path=/api/roles/**
+          filters:
+            - RewritePath=/api/roles/(?<segment>.*), /api/v1/roles/${segment}
+
+        - id: legacy-applications-redirect
+          uri: lb://openidaas-application-service
+          predicates:
+            - Path=/api/applications/**
+          filters:
+            - RewritePath=/api/applications/(?<segment>.*), /api/v1/applications/${segment}
+
+        - id: legacy-audit-redirect
+          uri: lb://openidaas-audit-service
+          predicates:
+            - Path=/api/audit/**
+          filters:
+            - RewritePath=/api/audit/(?<segment>.*), /api/v1/audit/${segment}
+
+      # 全局CORS配置
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins: "*"
+            allowed-methods: "*"
+            allowed-headers: "*"
+            allow-credentials: true
+            max-age: 3600
+
+  # Redis 配置
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DB:0}
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: -1ms
+          max-idle: 8
+          min-idle: 0
+      timeout: 3000ms
+
+# Actuator 配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,env,configprops
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+  metrics:
+    tags:
+      environment: dev
+      application: ${spring.application.name}
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.qoobot.openidaas: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-N/A}] %logger{36} - %msg%n'
+
+# 开发环境特性
+spring.devtools.restart.enabled: true

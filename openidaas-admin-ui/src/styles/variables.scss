@@ -1,0 +1,39 @@
+// sidebar
+$menuText: #bfcbd9;
+$menuActiveText: #409EFF;
+$subMenuActiveText: #f4f4f5; // https://github.com/ElemeFE/element/issues/12951
+
+$menuBg: #304156;
+$menuHover: #263445;
+
+$subMenuBg: #1f2d3d;
+$subMenuHover: #001528;
+
+$sideBarWidth: 210px;
+
+// navbar
+$navbarHeight: 50px;
+
+// tagsView
+$tagsViewHeight: 34px;
+
+// login
+$loginBg: #2d3a4b;
+$dark_gray: #889aa4;
+$light_gray: #eee;
+
+:export {
+  menuText: $menuText;
+  menuActiveText: $menuActiveText;
+  subMenuActiveText: $subMenuActiveText;
+  menuBg: $menuBg;
+  menuHover: $menuHover;
+  subMenuBg: $subMenuBg;
+  subMenuHover: $subMenuHover;
+  sideBarWidth: $sideBarWidth;
+  navbarHeight: $navbarHeight;
+  tagsViewHeight: $tagsViewHeight;
+  loginBg: $loginBg;
+  dark_gray: $dark_gray;
+  light_gray: $light_gray;
+}

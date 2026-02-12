@@ -1,0 +1,24 @@
+{
+  "adminUser": {
+    "username": "admin",
+    "password": "admin123",
+    "email": "admin@example.com"
+  },
+  "testUser": {
+    "username": "testuser",
+    "password": "Test123456",
+    "email": "testuser@example.com",
+    "realName": "Test User",
+    "phone": "13800138000"
+  },
+  "testRole": {
+    "name": "Test Role",
+    "code": "TEST_ROLE",
+    "description": "Test role description"
+  },
+  "testOrg": {
+    "name": "Test Organization",
+    "code": "TEST_ORG",
+    "description": "Test organization description"
+  }
+}

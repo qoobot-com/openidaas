@@ -1,0 +1,128 @@
+# 网关服务Nacos配置示例
+spring:
+  cloud:
+    gateway:
+      routes:
+        # 认证服务路由
+        - id: auth-service
+          uri: lb://openidaas-auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+            
+        # 用户服务路由
+        - id: user-service
+          uri: lb://openidaas-user-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+            
+        # 组织服务路由
+        - id: organization-service
+          uri: lb://openidaas-organization-service
+          predicates:
+            - Path=/api/organizations/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+            
+        # 角色服务路由
+        - id: role-service
+          uri: lb://openidaas-role-service
+          predicates:
+            - Path=/api/roles/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+            
+        # 应用服务路由
+        - id: application-service
+          uri: lb://openidaas-application-service
+          predicates:
+            - Path=/api/applications/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+            
+        # 授权服务路由
+        - id: authorization-service
+          uri: lb://openidaas-authorization-service
+          predicates:
+            - Path=/api/authorization/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+            
+        # 审计服务路由
+        - id: audit-service
+          uri: lb://openidaas-audit-service
+          predicates:
+            - Path=/api/audit/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        - SaveSession
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origin-patterns: "*"
+            allowed-methods: "*"
+            allowed-headers: "*"
+            allow-credentials: true
+
+# 网关特定配置
+gateway:
+  auth:
+    skip-paths: 
+      - /api/auth/login
+      - /api/auth/register
+      - /api/auth/token
+      - /health
+      - /actuator
+      - /admin
+  
+  rate-limit:
+    algorithm: token-bucket
+    requests-per-second: 10
+    burst-capacity: 20
+    window-size-seconds: 60
+    whitelist-clients: []
+  
+  timeout:
+    connect: 5000
+    response: 10000
+  
+  compression:
+    enabled: true
+    min-response-size: 1024
+    mime-types:
+      - application/json
+      - application/xml
+      - text/html
+      - text/css
+      - text/plain
+      - text/javascript
+      - application/javascript
+
+# JWT配置
+jwt:
+  secret: OpenIDaaSGatewaySecretKey1234567890
+  expiration: 86400000
+
+# Sentinel流控规则
+sentinel:
+  flow-rules:
+    - resource: "gateway-api"
+      count: 10
+      grade: 1
+      limitApp: "default"
+      strategy: 0
+      controlBehavior: 0

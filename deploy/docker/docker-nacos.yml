@@ -1,0 +1,42 @@
+services:
+  nacos:
+    image: 3bpds0vd1gewcx06p4.xuanyuan.run/nacos/nacos-server:v2.2.3
+    container_name: openidaas-nacos
+    restart: unless-stopped
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9849:9849"
+    environment:
+      MODE: standalone
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_SERVICE_HOST: mysql
+      MYSQL_SERVICE_PORT: 3306
+      MYSQL_SERVICE_DB_NAME: nacos_config
+      MYSQL_SERVICE_USER: open
+      MYSQL_SERVICE_PASSWORD: open
+      MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true
+      JVM_XMS: 512m
+      JVM_XMX: 512m
+      JVM_XMN: 256m
+      JAVA_OPT_EXT: "-Xms512m -Xmx512m -Xmn256m"
+    volumes:
+      - nacos_logs:/home/nacos/logs
+      - ./nacos/conf/application.properties:/home/nacos/conf/application.properties:ro
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/v1/console/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - openidaas-network
+
+volumes:
+  nacos_logs:
+    driver: local
+
+networks:
+  openidaas-network:
+    driver: bridge
