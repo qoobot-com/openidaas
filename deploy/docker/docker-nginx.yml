@@ -1,6 +1,6 @@
 services:
   nginx:
-    image: 3bpds0vd1gewcx06p4.xuanyuan.run/library/nginx:alpine
+    image: nginx:alpine
     container_name: openidaas-nginx
     restart: unless-stopped
     ports:

@@ -1,0 +1,330 @@
+# ============================================
+# Prometheus 告警规则
+# ============================================
+
+groups:
+  - name: openidaas_alerts
+    interval: 30s
+    rules:
+      # ============================================
+      # 服务可用性告警
+      # ============================================
+
+      - alert: ServiceDown
+        expr: up{job=~"openidaas-.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "服务 {{ $labels.job }} 不可用"
+          description: "服务 {{ $labels.job }} ({{ $labels.instance }}) 已宕机超过1分钟"
+
+      # ============================================
+      # 高错误率告警
+      # ============================================
+
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{job=~"openidaas-.*",status=~"5.."}[5m])) by (job)
+          /
+          sum(rate(http_server_requests_seconds_count{job=~"openidaas-.*"}[5m])) by (job)
+          > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} 错误率过高"
+          description: "服务 {{ $labels.job }} 在过去5分钟内错误率超过5%"
+
+      - alert: CriticalErrorRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{job=~"openidaas-.*",status=~"5.."}[5m])) by (job)
+          /
+          sum(rate(http_server_requests_seconds_count{job=~"openidaas-.*"}[5m])) by (job)
+          > 0.1
+        for: 3m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} 错误率严重"
+          description: "服务 {{ $labels.job }} 在过去3分钟内错误率超过10%"
+
+      # ============================================
+      # 响应时间告警
+      # ============================================
+
+      - alert: SlowResponse
+        expr: |
+          histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job=~"openidaas-.*"}[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} 响应缓慢"
+          description: "服务 {{ $labels.job }} 95%的请求响应时间超过1秒"
+
+      - alert: VerySlowResponse
+        expr: |
+          histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job=~"openidaas-.*"}[5m])) > 3
+        for: 3m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} 响应非常缓慢"
+          description: "服务 {{ $labels.job }} 95%的请求响应时间超过3秒"
+
+      # ============================================
+      # 登录失败告警
+      # ============================================
+
+      - alert: HighLoginFailureRate
+        expr: |
+          rate(auth_login_failure_total[5m]) / rate(auth_login_success_total[5m]) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+          type: security
+        annotations:
+          summary: "登录失败率过高"
+          description: "在过去5分钟内,登录失败率超过30%"
+
+      - alert: CriticalLoginFailureRate
+        expr: |
+          rate(auth_login_failure_total[5m]) / rate(auth_login_success_total[5m]) > 0.5
+        for: 3m
+        labels:
+          severity: critical
+          type: security
+        annotations:
+          summary: "登录失败率严重"
+          description: "在过去3分钟内,登录失败率超过50%,可能存在暴力破解攻击"
+
+      # ============================================
+      # MFA验证失败告警
+      # ============================================
+
+      - alert: HighMFAFailureRate
+        expr: |
+          rate(auth_mfa_failure_total[5m]) / rate(auth_mfa_success_total[5m]) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          type: security
+        annotations:
+          summary: "MFA验证失败率过高"
+          description: "在过去5分钟内,MFA验证失败率超过20%"
+
+      # ============================================
+      # 内存使用告警
+      # ============================================
+
+      - alert: HighMemoryUsage
+        expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} 内存使用过高"
+          description: "服务 {{ $labels.job }} 堆内存使用超过85%"
+
+      - alert: CriticalMemoryUsage
+        expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} 内存严重不足"
+          description: "服务 {{ $labels.job }} 堆内存使用超过95%,即将发生OOM"
+
+      # ============================================
+      # CPU使用告警
+      # ============================================
+
+      - alert: HighCPUUsage
+        expr: |
+          rate(process_cpu_seconds_total{job=~"openidaas-.*"}[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} CPU使用过高"
+          description: "服务 {{ $labels.job }} CPU使用率超过80%"
+
+      - alert: CriticalCPUUsage
+        expr: |
+          rate(process_cpu_seconds_total{job=~"openidaas-.*"}[5m]) > 0.95
+        for: 3m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} CPU使用严重过高"
+          description: "服务 {{ $labels.job }} CPU使用率超过95%"
+
+      # ============================================
+      # 磁盘空间告警
+      # ============================================
+
+      - alert: HighDiskUsage
+        expr: |
+          (node_filesystem_size_bytes - node_filesystem_avail_bytes) / node_filesystem_size_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "磁盘空间不足"
+          description: "磁盘 {{ $labels.device }} 使用率超过80%"
+
+      - alert: CriticalDiskUsage
+        expr: |
+          (node_filesystem_size_bytes - node_filesystem_avail_bytes) / node_filesystem_size_bytes > 0.95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "磁盘空间严重不足"
+          description: "磁盘 {{ $labels.device }} 使用率超过95%"
+
+      # ============================================
+      # 数据库告警
+      # ============================================
+
+      - alert: MySQLSlowQueries
+        expr: |
+          rate(mysql_global_status_slow_queries[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: mysql
+        annotations:
+          summary: "MySQL慢查询过多"
+          description: "在过去5分钟内,慢查询数超过10个/秒"
+
+      - alert: MySQLConnectionsHigh
+        expr: |
+          mysql_global_status_threads_connected / mysql_global_variables_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: mysql
+        annotations:
+          summary: "MySQL连接数过高"
+          description: "MySQL当前连接数超过最大连接数的80%"
+
+      - alert: MySQLReplicationLag
+        expr: |
+          mysql_slave_status_seconds_behind_master > 60
+        for: 5m
+        labels:
+          severity: warning
+          component: mysql
+        annotations:
+          summary: "MySQL主从延迟"
+          description: "MySQL从库延迟超过60秒"
+
+      # ============================================
+      # Redis告警
+      # ============================================
+
+      - alert: RedisMemoryHigh
+        expr: |
+          redis_memory_used_bytes / redis_memory_max_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "Redis内存使用过高"
+          description: "Redis内存使用超过80%"
+
+      - alert: RedisConnectionsHigh
+        expr: |
+          redis_connected_clients / redis_config_maxclients > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "Redis连接数过高"
+          description: "Redis连接数超过最大连接数的80%"
+
+      - alert: RedisKeyEvictions
+        expr: |
+          rate(redis_evicted_keys_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "Redis驱逐Key过多"
+          description: "在过去5分钟内,Redis驱逐的Key超过100个/秒"
+
+      # ============================================
+      # 线程告警
+      # ============================================
+
+      - alert: HighThreadCount
+        expr: |
+          jvm_threads_live_threads{job=~"openidaas-.*"} > 500
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} 线程数过高"
+          description: "服务 {{ $labels.job }} 活跃线程数超过500"
+
+      - alert: ThreadDeadlockDetected
+        expr: jvm_threads_deadlocked{job=~"openidaas-.*"} > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} 检测到死锁"
+          description: "服务 {{ $labels.job }} 检测到线程死锁,需要立即处理"
+
+      # ============================================
+      # GC告警
+      # ============================================
+
+      - alert: HighGCTime
+        expr: |
+          rate(jvm_gc_pause_seconds_sum[5m]) / rate(jvm_gc_pause_seconds_count[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} GC耗时过长"
+          description: "服务 {{ $labels.job }} GC平均耗时超过100ms"
+
+      - alert: VeryHighGCTime
+        expr: |
+          rate(jvm_gc_pause_seconds_sum[5m]) / rate(jvm_gc_pause_seconds_count[5m]) > 0.5
+        for: 3m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} GC耗时严重过长"
+          description: "服务 {{ $labels.job }} GC平均耗时超过500ms"
+
+      # alert: HighGCFrequency
+        expr: |
+          rate(jvm_gc_pause_seconds_count[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} GC频率过高"
+          description: "服务 {{ $labels.job }} GC频率超过10次/秒"

@@ -1,6 +1,6 @@
 services:
   mysql:
-    image: 3bpds0vd1gewcx06p4.xuanyuan.run/library/mysql:8.0
+    image: mysql:8.0
     container_name: openidaas-mysql
     restart: unless-stopped
     environment:
@@ -13,7 +13,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ./mysql/mysql_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
       # 移除 my.cnf 挂载以避免权限警告
       - ../db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ../db/nacos-schema.sql:/docker-entrypoint-initdb.d/03-nacos-schema.sql:ro

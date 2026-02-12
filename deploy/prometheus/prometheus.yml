@@ -1,157 +1,142 @@
-# OpenIDaaS Prometheus 配置文件
-# 用于监控所有 OpenIDaaS 微服务
+# ============================================
+# Prometheus 配置文件
+# ============================================
 
 global:
-  # 采集间隔
-  scrape_interval: 15s
-  # 规则评估间隔
-  evaluation_interval: 15s
-  # 外部标签
+  scrape_interval: 15s # 抓取间隔
+  evaluation_interval: 15s # 规则评估间隔
   external_labels:
-    cluster: 'openidaas-cluster'
-    environment: '${ENVIRONMENT:production}'
-    datacenter: '${DATACENTER:default}'
+    cluster: 'openidaas'
+    env: 'production'
+
+# 告警管理器配置
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'alertmanager:9093'
 
 # 告警规则文件
 rule_files:
-  - 'alert_rules/*.yml'
+  - 'alerts.yml'
 
-# 监控目标配置
+# 抓取配置
 scrape_configs:
-  # Prometheus 自监控
+  # Prometheus自身监控
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
-        labels:
-          service: 'prometheus'
-          component: 'monitoring'
 
-  # 网关服务
+  # OpenIDaaS API网关
   - job_name: 'openidaas-gateway'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['openidaas-gateway:8080']
+      - targets: ['gateway:8080']
         labels:
           service: 'gateway'
-          component: 'gateway'
-    scrape_interval: 10s
-    scrape_timeout: 5s
+          component: 'api-gateway'
 
-  # 认证服务
+  # OpenIDaaS认证服务
   - job_name: 'openidaas-auth-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['openidaas-auth-service:8082']
+      - targets: ['auth-service:8081']
         labels:
-          service: 'auth-service'
-          component: 'auth'
-    scrape_interval: 10s
-    scrape_timeout: 5s
+          service: 'auth'
+          component: 'authentication'
 
-  # 用户服务
+  # OpenIDaaS用户服务
   - job_name: 'openidaas-user-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['openidaas-user-service:8081']
+      - targets: ['user-service:8082']
         labels:
-          service: 'user-service'
-          component: 'user'
-    scrape_interval: 10s
-    scrape_timeout: 5s
+          service: 'user'
+          component: 'user-management'
 
-  # 组织服务
+  # OpenIDaaS组织服务
   - job_name: 'openidaas-organization-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['openidaas-organization-service:8083']
+      - targets: ['organization-service:8083']
         labels:
-          service: 'organization-service'
-          component: 'organization'
-    scrape_interval: 10s
-    scrape_timeout: 5s
+          service: 'organization'
+          component: 'organization-management'
 
-  # 角色服务
+  # OpenIDaaS角色权限服务
   - job_name: 'openidaas-role-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['openidaas-role-service:8084']
+      - targets: ['role-service:8084']
         labels:
-          service: 'role-service'
-          component: 'role'
-    scrape_interval: 10s
-    scrape_timeout: 5s
+          service: 'role'
+          component: 'role-permission'
 
-  # 应用服务
+  # OpenIDaaS应用服务
   - job_name: 'openidaas-application-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['openidaas-application-service:8086']
+      - targets: ['application-service:8085']
         labels:
-          service: 'application-service'
-          component: 'application'
-    scrape_interval: 10s
-    scrape_timeout: 5s
+          service: 'application'
+          component: 'application-management'
 
-  # 审计服务
-  - job_name: 'openidaas-audit-service'
-    metrics_path: '/actuator/prometheus'
-    static_configs:
-      - targets: ['openidaas-audit-service:8085']
-        labels:
-          service: 'audit-service'
-          component: 'audit'
-    scrape_interval: 10s
-    scrape_timeout: 5s
-
-  # 授权服务
+  # OpenIDaaS授权服务
   - job_name: 'openidaas-authorization-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['openidaas-authorization-service:8087']
+      - targets: ['authorization-service:8086']
         labels:
-          service: 'authorization-service'
+          service: 'authorization'
           component: 'authorization'
-    scrape_interval: 10s
-    scrape_timeout: 5s
 
-  # Kubernetes 服务发现（用于 K8s 环境）
-  - job_name: 'kubernetes-pods'
+  # OpenIDaaS审计服务
+  - job_name: 'openidaas-audit-service'
     metrics_path: '/actuator/prometheus'
-    kubernetes_sd_configs:
-      - role: pod
-        namespaces:
-          names:
-            - openidaas
-    relabel_configs:
-      # 保留有 app 标签的 Pod
-      - source_labels: [__meta_kubernetes_pod_label_app]
-        regex: .+
-        action: keep
-      # 设置 pod_name 标签
-      - source_labels: [__meta_kubernetes_pod_name]
-        target_label: pod_name
-      # 设置 app 标签
-      - source_labels: [__meta_kubernetes_pod_label_app]
-        target_label: app
-      # 设置 namespace 标签
-      - source_labels: [__meta_kubernetes_namespace]
-        target_label: namespace
-      # 设置 service 标签
-      - source_labels: [__meta_kubernetes_pod_label_service]
-        target_label: service
+    static_configs:
+      - targets: ['audit-service:8087']
+        labels:
+          service: 'audit'
+          component: 'audit-logging'
 
-  # Node Exporter（服务器指标）
-  - job_name: 'node-exporter'
+  # MySQL Exporter
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql-exporter:9104']
+        labels:
+          service: 'mysql'
+          component: 'database'
+
+  # Redis Exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: 'redis'
+          component: 'cache'
+
+  # Node Exporter (服务器指标)
+  - job_name: 'node'
     static_configs:
       - targets: ['node-exporter:9100']
         labels:
-          service: 'node-exporter'
-          component: 'system'
+          service: 'node'
+          component: 'server'
 
-  # Alertmanager
-  - job_name: 'alertmanager'
+  # Spring Boot Admin
+  - job_name: 'spring-boot-admin'
+    metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['alertmanager:9093']
+      - targets: ['spring-boot-admin:8088']
         labels:
-          service: 'alertmanager'
+          service: 'admin'
           component: 'monitoring'
+
+  # Nacos
+  - job_name: 'nacos'
+    metrics_path: '/nacos/actuator/prometheus'
+    static_configs:
+      - targets: ['nacos:8848']
+        labels:
+          service: 'nacos'
+          component: 'service-discovery'

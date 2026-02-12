@@ -1,6 +1,6 @@
 services:
   nacos:
-    image: 3bpds0vd1gewcx06p4.xuanyuan.run/nacos/nacos-server:v2.2.3
+    image: nacos/nacos-server:v2.2.3
     container_name: openidaas-nacos
     restart: unless-stopped
     ports:

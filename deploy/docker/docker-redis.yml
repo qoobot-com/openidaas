@@ -1,6 +1,6 @@
 services:
   redis:
-    image: 3bpds0vd1gewcx06p4.xuanyuan.run/library/redis:alpine
+    image: redis:alpine
     container_name: openidaas-redis
     restart: unless-stopped
     ports:
