@@ -1,7 +1,8 @@
 package com.qoobot.openidaas.core.domain;
 
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.qoobot.openidaas.common.entity.BaseEntity;
-import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -14,43 +15,42 @@ import java.util.Set;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = "dicts")
+@TableName("dicts")
 public class Dict extends BaseEntity {
 
     /**
      * 字典名称
      */
-    @Column(name = "dict_name", length = 100, nullable = false)
+    @TableField("dict_name")
     private String dictName;
 
     /**
      * 字典编码
      */
-    @Column(name = "dict_code", length = 50, nullable = false, unique = true)
+    @TableField("dict_code")
     private String dictCode;
 
     /**
      * 字典描述
      */
-    @Column(name = "description", length = 200)
+    @TableField("description")
     private String description;
 
     /**
      * 是否启用
      */
-    @Column(name = "enabled")
+    @TableField("enabled")
     private Boolean enabled = true;
 
     /**
      * 排序
      */
-    @Column(name = "sort_order")
+    @TableField("sort_order")
     private Integer sortOrder = 0;
 
     /**
      * 字典项集合
      */
-    @OneToMany(mappedBy = "dict", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @TableField(exist = false)
     private Set<DictItem> dictItems;
 }

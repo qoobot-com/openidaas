@@ -1,7 +1,8 @@
 package com.qoobot.openidaas.core.domain;
 
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.qoobot.openidaas.common.entity.BaseEntity;
-import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -15,115 +16,108 @@ import java.util.Set;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = "applications")
+@TableName("applications")
 public class Application extends BaseEntity {
 
     /**
      * 应用名称
      */
-    @Column(name = "app_name", length = 100, nullable = false)
+    @TableField("app_name")
     private String appName;
 
     /**
      * 应用描述
      */
-    @Column(name = "app_description", length = 500)
+    @TableField("app_description")
     private String appDescription;
 
     /**
      * 客户端ID
      */
-    @Column(name = "client_id", length = 100, nullable = false, unique = true)
+    @TableField("client_id")
     private String clientId;
 
     /**
      * 客户端密钥
      */
-    @Column(name = "client_secret", length = 255, nullable = false)
+    @TableField("client_secret")
     private String clientSecret;
 
     /**
      * 回调地址
      */
-    @Column(name = "redirect_uri", length = 500)
+    @TableField("redirect_uri")
     private String redirectUri;
 
     /**
      * 授权类型（多个用逗号分隔）
      */
-    @Column(name = "grant_types", length = 200)
+    @TableField("grant_types")
     private String grantTypes;
 
     /**
      * 作用域（多个用逗号分隔）
      */
-    @Column(name = "scopes", length = 200)
+    @TableField("scopes")
     private String scopes;
 
     /**
      * 应用图标URL
      */
-    @Column(name = "icon_url", length = 255)
+    @TableField("icon_url")
     private String iconUrl;
 
     /**
      * 应用主页URL
      */
-    @Column(name = "home_url", length = 255)
+    @TableField("home_url")
     private String homeUrl;
 
     /**
      * 应用类型
      */
-    @Column(name = "app_type", length = 50)
+    @TableField("app_type")
     private String appType;
 
     /**
      * 是否启用
      */
-    @Column(name = "enabled")
+    @TableField("enabled")
     private Boolean enabled = true;
 
     /**
      * 应用状态（审核中、已上线、已下线等）
      */
-    @Column(name = "status", length = 20)
+    @TableField("status")
     private String status;
 
     /**
      * 审核时间
      */
-    @Column(name = "audit_time")
+    @TableField("audit_time")
     private LocalDateTime auditTime;
 
     /**
      * 审核人
      */
-    @Column(name = "auditor")
+    @TableField("auditor")
     private Long auditor;
 
     /**
      * 审核意见
      */
-    @Column(name = "audit_opinion", length = 500)
+    @TableField("audit_opinion")
     private String auditOpinion;
 
     /**
      * 应用拥有的权限集合
      */
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "app_permissions",
-        joinColumns = @JoinColumn(name = "app_id"),
-        inverseJoinColumns = @JoinColumn(name = "perm_id")
-    )
+    @TableField(exist = false)
     private Set<Permission> permissions;
 
     /**
      * 应用所属租户
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id")
+    @TableField(exist = false)
     private Tenant tenant;
 }

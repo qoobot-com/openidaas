@@ -25,10 +25,10 @@
             <version>${project.version}</version>
         </dependency>
         
-        <!-- Spring Boot Data JPA -->
+        <!-- MyBatis-Plus（替代JPA） -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
         </dependency>
         
         <!-- MySQL Driver -->

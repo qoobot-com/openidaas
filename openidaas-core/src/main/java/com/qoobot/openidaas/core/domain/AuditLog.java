@@ -1,7 +1,8 @@
 package com.qoobot.openidaas.core.domain;
 
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.qoobot.openidaas.common.entity.BaseEntity;
-import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -14,133 +15,132 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = "audit_logs")
+@TableName("audit_logs")
 public class AuditLog extends BaseEntity {
 
     /**
      * 操作类型
      */
-    @Column(name = "operation_type", length = 50, nullable = false)
+    @TableField("operation_type")
     private String operationType;
 
     /**
      * 操作描述
      */
-    @Column(name = "operation_desc", length = 200)
+    @TableField("operation_desc")
     private String operationDesc;
 
     /**
      * 操作模块
      */
-    @Column(name = "module", length = 50)
+    @TableField("module")
     private String module;
 
     /**
      * 操作子模块
      */
-    @Column(name = "sub_module", length = 50)
+    @TableField("sub_module")
     private String subModule;
 
     /**
      * 操作对象类型
      */
-    @Column(name = "target_type", length = 50)
+    @TableField("target_type")
     private String targetType;
 
     /**
      * 操作对象ID
      */
-    @Column(name = "target_id")
+    @TableField("target_id")
     private Long targetId;
 
     /**
      * 操作对象名称
      */
-    @Column(name = "target_name", length = 100)
+    @TableField("target_name")
     private String targetName;
 
     /**
      * 请求URL
      */
-    @Column(name = "request_url", length = 500)
+    @TableField("request_url")
     private String requestUrl;
 
     /**
      * 请求方法
      */
-    @Column(name = "request_method", length = 10)
+    @TableField("request_method")
     private String requestMethod;
 
     /**
      * 请求参数
      */
-    @Column(name = "request_params", columnDefinition = "TEXT")
+    @TableField("request_params")
     private String requestParams;
 
     /**
      * 响应结果
      */
-    @Column(name = "response_result", columnDefinition = "TEXT")
+    @TableField("response_result")
     private String responseResult;
 
     /**
      * 操作用户ID
      */
-    @Column(name = "operator_id")
+    @TableField("operator_id")
     private Long operatorId;
 
     /**
      * 操作用户名
      */
-    @Column(name = "operator_name", length = 50)
+    @TableField("operator_name")
     private String operatorName;
 
     /**
      * 操作用户IP
      */
-    @Column(name = "operator_ip", length = 50)
+    @TableField("operator_ip")
     private String operatorIp;
 
     /**
      * 操作用户代理
      */
-    @Column(name = "user_agent", length = 500)
+    @TableField("user_agent")
     private String userAgent;
 
     /**
      * 操作时间
      */
-    @Column(name = "operation_time", nullable = false)
+    @TableField("operation_time")
     private LocalDateTime operationTime;
 
     /**
      * 执行耗时（毫秒）
      */
-    @Column(name = "execution_time")
+    @TableField("execution_time")
     private Long executionTime;
 
     /**
      * 操作结果（成功/失败）
      */
-    @Column(name = "result", length = 20)
+    @TableField("result")
     private String result;
 
     /**
      * 错误信息
      */
-    @Column(name = "error_message", length = 500)
+    @TableField("error_message")
     private String errorMessage;
 
     /**
      * 租户ID
      */
-    @Column(name = "tenant_id")
+    @TableField("tenant_id")
     private Long tenantId;
 
     /**
      * 应用ID
      */
-    @Column(name = "app_id")
+    @TableField("app_id")
     private Long appId;
 }

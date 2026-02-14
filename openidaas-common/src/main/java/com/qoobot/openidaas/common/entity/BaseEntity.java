@@ -1,5 +1,6 @@
 package com.qoobot.openidaas.common.entity;
 
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -7,7 +8,7 @@ import java.time.LocalDateTime;
 
 /**
  * 基础实体类
- * 提供通用的字段
+ * 提供通用的字段和MyBatis-Plus配置
  *
  * @author QooBot
  */
@@ -17,39 +18,47 @@ public abstract class BaseEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 主键ID
+     * 主键ID（各子类定义自己的@TableId）
      */
     private Long id;
 
     /**
      * 创建时间
      */
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
     /**
      * 更新时间
      */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
     /**
      * 创建人ID
      */
+    @TableField(fill = FieldFill.INSERT)
     private Long createdBy;
 
     /**
      * 更新人ID
      */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updatedBy;
 
     /**
-     * 版本号
+     * 逻辑删除标记（0-未删除，1-已删除）
      */
-    private Long version;
+    @TableLogic
+    @TableField("deleted")
+    private Boolean deleted = false;
 
     /**
-     * 是否删除
+     * 版本号（乐观锁）
      */
-    private Boolean deleted = false;
+    @Version
+    @TableField("version")
+    private Long version = 0L;
 
     /**
      * 租户ID
