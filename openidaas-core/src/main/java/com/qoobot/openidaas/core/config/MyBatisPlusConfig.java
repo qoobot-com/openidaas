@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.BlockAttackInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
-import com.baomidou.mybatisplus.extension.plugins.inner.PerformanceInnerInterceptor;
+
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,10 +35,8 @@ public class MyBatisPlusConfig {
         interceptor.addInnerInterceptor(paginationInterceptor);
 
         // 2. 性能分析插件（开发环境启用）
-        PerformanceInnerInterceptor performanceInterceptor = new PerformanceInnerInterceptor();
-        performanceInterceptor.setMaxTime(500);
-        performanceInterceptor.setFormat(true);
-        interceptor.addInnerInterceptor(performanceInterceptor);
+        // 注意：PerformanceInnerInterceptor 在较新版本中已被移除
+        // 如果需要性能监控，可以使用其他方式实现
 
         // 3. 乐观锁插件
         interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());

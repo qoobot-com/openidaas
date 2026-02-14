@@ -30,6 +30,12 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         
+        <!-- Spring Boot Web Actuator (用于 Metrics) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        
         <!-- Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -110,6 +116,25 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>${springdoc.version}</version>
+        </dependency>
+        
+        <!-- MyBatis-Plus 核心依赖 -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+        </dependency>
+        
+        <!-- Jasypt 加密 -->
+        <dependency>
+            <groupId>com.github.ulisesbocchio</groupId>
+            <artifactId>jasypt-spring-boot-starter</artifactId>
+        </dependency>
+        
+
+        <!-- Micrometer 监控 -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
         </dependency>
         
         <!-- Test Dependencies -->

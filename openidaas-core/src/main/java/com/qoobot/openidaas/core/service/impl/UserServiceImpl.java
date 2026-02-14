@@ -11,8 +11,8 @@ import com.qoobot.openidaas.common.exception.BusinessException;
 import com.qoobot.openidaas.common.util.PasswordUtil;
 import com.qoobot.openidaas.common.vo.PageResultVO;
 import com.qoobot.openidaas.common.vo.user.UserVO;
-import com.qoobot.openidaas.core.domain.Role;
 import com.qoobot.openidaas.core.domain.User;
+import com.qoobot.openidaas.core.domain.UserDepartment;
 import com.qoobot.openidaas.core.domain.UserRole;
 import com.qoobot.openidaas.core.mapper.PermissionMapper;
 import com.qoobot.openidaas.core.mapper.UserMapper;
@@ -212,12 +212,12 @@ public class UserServiceImpl implements UserService {
 
         // 批量插入新的部门关联
         if (deptIds != null && !deptIds.isEmpty()) {
-            List<com.qoobot.openidaas.core.domain.UserDepartment> userDepts = deptIds.stream()
+            List<UserDepartment> userDepts = deptIds.stream()
                     .map(deptId -> {
-                        com.qoobot.openidaas.core.domain.UserDepartment userDept =
-                            new com.qoobot.openidaas.core.domain.UserDepartment();
+                        UserDepartment userDept =
+                            new UserDepartment();
                         userDept.setUserId(userId);
-                        userDept.setDepartmentId(deptId);
+                        userDept.setDeptId(deptId);
                         return userDept;
                     })
                     .collect(Collectors.toList());

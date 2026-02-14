@@ -6,7 +6,7 @@ import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.binder.system.UptimeMetrics;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
-import org.springframework.boot.actuate.metrics.web.servlet.WebMvcTagsProvider;
+// import org.springframework.boot.actuate.metrics.web.servlet.WebMvcTagsProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -61,8 +61,9 @@ public class MetricsConfig {
     }
 
     /**
-     * 自定义Web MVC标签
+     * 自定义Web MVC标签 (暂时注释，避免编译错误)
      */
+    /*
     @Bean
     public WebMvcTagsProvider webMvcTagsProvider() {
         return (request, response, exception) -> {
@@ -81,4 +82,5 @@ public class MetricsConfig {
             return tags;
         };
     }
+    */
 }

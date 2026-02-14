@@ -9,23 +9,13 @@ import com.qoobot.openidaas.common.vo.PageResultVO;
 import com.qoobot.openidaas.common.vo.ResultVO;
 import com.qoobot.openidaas.common.vo.user.UserVO;
 import com.qoobot.openidaas.core.domain.User;
-import com.qoobot.openidaas.core.repository.UserRepository;
+import com.qoobot.openidaas.core.mapper.UserMapper;
 import com.qoobot.openidaas.core.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-
-import jakarta.persistence.criteria.Predicate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 /**
  * 用户应用服务
@@ -39,7 +29,7 @@ import java.util.Set;
 public class UserApplicationService {
 
     private final UserService userService;
-    private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     /**
      * 创建用户
@@ -51,19 +41,19 @@ public class UserApplicationService {
             validateUserCreateDTO(userCreateDTO);
             
             // 检查用户名是否已存在
-            if (userRepository.findByUsername(userCreateDTO.getUsername()).isPresent()) {
+            if (userMapper.findByUsername(userCreateDTO.getUsername()) != null) {
                 throw new BusinessException("用户名已存在");
             }
-            
+
             // 检查邮箱是否已存在
-            if (StringUtils.hasText(userCreateDTO.getEmail()) && 
-                userRepository.findByEmail(userCreateDTO.getEmail()).isPresent()) {
+            if (StringUtils.hasText(userCreateDTO.getEmail()) &&
+                userMapper.findByEmail(userCreateDTO.getEmail()) != null) {
                 throw new BusinessException("邮箱已存在");
             }
-            
+
             // 检查手机号是否已存在
-            if (StringUtils.hasText(userCreateDTO.getMobile()) && 
-                userRepository.findByMobile(userCreateDTO.getMobile()).isPresent()) {
+            if (StringUtils.hasText(userCreateDTO.getMobile()) &&
+                userMapper.findByMobile(userCreateDTO.getMobile()) != null) {
                 throw new BusinessException("手机号已存在");
             }
             
