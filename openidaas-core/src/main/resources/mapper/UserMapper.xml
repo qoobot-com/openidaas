@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qoobot.openidaas.core.mapper.UserMapper">
+
+    <!-- 根据租户ID分页查询用户 -->
+    <select id="findByTenantId" resultType="com.qoobot.openidaas.core.domain.User">
+        SELECT * FROM users
+        WHERE tenant_id = #{tenantId}
+        ORDER BY id DESC
+    </select>
+
+    <!-- 根据用户名模糊查询（分页） -->
+    <select id="findByUsernameContainingAndTenantId" resultType="com.qoobot.openidaas.core.domain.User">
+        SELECT * FROM users
+        WHERE username LIKE CONCAT('%', #{username}, '%')
+        AND tenant_id = #{tenantId}
+        ORDER BY id DESC
+    </select>
+
+    <!-- 根据昵称模糊查询（分页） -->
+    <select id="findByNicknameContainingAndTenantId" resultType="com.qoobot.openidaas.core.domain.User">
+        SELECT * FROM users
+        WHERE nickname LIKE CONCAT('%', #{nickname}, '%')
+        AND tenant_id = #{tenantId}
+        ORDER BY id DESC
+    </select>
+
+    <!-- 根据部门ID查找用户列表（通过中间表） -->
+    <select id="findByDepartmentId" resultType="com.qoobot.openidaas.core.domain.User">
+        SELECT u.* FROM users u
+        INNER JOIN user_departments ud ON u.id = ud.user_id
+        WHERE ud.dept_id = #{deptId}
+        ORDER BY u.id DESC
+    </select>
+
+    <!-- 根据角色ID查找用户列表（通过中间表） -->
+    <select id="findByRoleId" resultType="com.qoobot.openidaas.core.domain.User">
+        SELECT u.* FROM users u
+        INNER JOIN user_roles ur ON u.id = ur.user_id
+        WHERE ur.role_id = #{roleId}
+        ORDER BY u.id DESC
+    </select>
+
+</mapper>

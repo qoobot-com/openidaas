@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qoobot.openidaas.core.mapper.DepartmentMapper">
+
+    <!-- 根据租户ID分页查询部门 -->
+    <select id="findByTenantId" resultType="com.qoobot.openidaas.core.domain.Department">
+        SELECT * FROM departments
+        WHERE tenant_id = #{tenantId}
+        ORDER BY tree_path, sort_order
+    </select>
+
+    <!-- 根据部门编码模糊查询（分页） -->
+    <select id="findByDeptCodeContainingAndTenantId" resultType="com.qoobot.openidaas.core.domain.Department">
+        SELECT * FROM departments
+        WHERE dept_code LIKE CONCAT('%', #{deptCode}, '%')
+        AND tenant_id = #{tenantId}
+        ORDER BY tree_path, sort_order
+    </select>
+
+    <!-- 根据部门名称模糊查询（分页） -->
+    <select id="findByDeptNameContainingAndTenantId" resultType="com.qoobot.openidaas.core.domain.Department">
+        SELECT * FROM departments
+        WHERE dept_name LIKE CONCAT('%', #{deptName}, '%')
+        AND tenant_id = #{tenantId}
+        ORDER BY tree_path, sort_order
+    </select>
+
+    <!-- 根据用户ID查找所属部门列表（通过中间表） -->
+    <select id="findByUserId" resultType="com.qoobot.openidaas.core.domain.Department">
+        SELECT d.* FROM departments d
+        INNER JOIN user_departments ud ON d.id = ud.dept_id
+        WHERE ud.user_id = #{userId}
+        ORDER BY d.tree_path, d.sort_order
+    </select>
+
+    <!-- 查找叶子节点部门（子查询） -->
+    <select id="findLeafDepartments" resultType="com.qoobot.openidaas.core.domain.Department">
+        SELECT * FROM departments d1
+        WHERE d1.tenant_id = #{tenantId}
+        AND NOT EXISTS (
+            SELECT 1 FROM departments d2
+            WHERE d2.parent_id = d1.id
+        )
+        ORDER BY d1.tree_path, d1.sort_order
+    </select>
+
+</mapper>

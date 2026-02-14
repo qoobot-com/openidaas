@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qoobot.openidaas.core.mapper.DictItemMapper">
+
+    <!-- 根据字典ID分页查询字典项 -->
+    <select id="findByDictId" resultType="com.qoobot.openidaas.core.domain.DictItem">
+        SELECT * FROM dict_items
+        WHERE dict_id = #{dictId}
+        ORDER BY sort_order
+    </select>
+
+    <!-- 根据字典编码查找字典项列表（表关联） -->
+    <select id="findByDictCodeOrderBySortOrder" resultType="com.qoobot.openidaas.core.domain.DictItem">
+        SELECT di.* FROM dict_items di
+        INNER JOIN dicts d ON di.dict_id = d.id
+        WHERE d.dict_code = #{dictCode}
+        ORDER BY di.sort_order
+    </select>
+
+    <!-- 根据启用状态分页查询字典项 -->
+    <select id="findByEnabled" resultType="com.qoobot.openidaas.core.domain.DictItem">
+        SELECT * FROM dict_items
+        WHERE enabled = #{enabled}
+        ORDER BY dict_id, sort_order
+    </select>
+
+    <!-- 根据字典项标签模糊查询（分页） -->
+    <select id="findByItemLabelContainingAndDictId" resultType="com.qoobot.openidaas.core.domain.DictItem">
+        SELECT * FROM dict_items
+        WHERE item_label LIKE CONCAT('%', #{itemLabel}, '%')
+        AND dict_id = #{dictId}
+        ORDER BY sort_order
+    </select>
+
+    <!-- 根据字典项值模糊查询（分页） -->
+    <select id="findByItemValueContainingAndDictId" resultType="com.qoobot.openidaas.core.domain.DictItem">
+        SELECT * FROM dict_items
+        WHERE item_value LIKE CONCAT('%', #{itemValue}, '%')
+        AND dict_id = #{dictId}
+        ORDER BY sort_order
+    </select>
+
+</mapper>

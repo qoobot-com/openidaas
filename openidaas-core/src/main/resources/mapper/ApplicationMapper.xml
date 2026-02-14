@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qoobot.openidaas.core.mapper.ApplicationMapper">
+
+    <!-- 根据租户ID分页查询应用 -->
+    <select id="findByTenantId" resultType="com.qoobot.openidaas.core.domain.Application">
+        SELECT * FROM applications
+        WHERE tenant_id = #{tenantId}
+        ORDER BY id DESC
+    </select>
+
+    <!-- 根据应用名称模糊查询（分页） -->
+    <select id="findByAppNameContainingAndTenantId" resultType="com.qoobot.openidaas.core.domain.Application">
+        SELECT * FROM applications
+        WHERE app_name LIKE CONCAT('%', #{appName}, '%')
+        AND tenant_id = #{tenantId}
+        ORDER BY id DESC
+    </select>
+
+    <!-- 根据客户端ID模糊查询（分页） -->
+    <select id="findByClientIdContainingAndTenantId" resultType="com.qoobot.openidaas.core.domain.Application">
+        SELECT * FROM applications
+        WHERE client_id LIKE CONCAT('%', #{clientId}, '%')
+        AND tenant_id = #{tenantId}
+        ORDER BY id DESC
+    </select>
+
+    <!-- 根据权限ID查找应用列表（通过中间表） -->
+    <select id="findByPermissionId" resultType="com.qoobot.openidaas.core.domain.Application">
+        SELECT DISTINCT a.* FROM applications a
+        INNER JOIN app_permissions ap ON a.id = ap.app_id
+        WHERE ap.permission_id = #{permId}
+        ORDER BY a.id DESC
+    </select>
+
+</mapper>

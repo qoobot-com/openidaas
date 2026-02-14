@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qoobot.openidaas.core.mapper.UserRoleMapper">
+
+    <!-- 批量插入用户角色关联 -->
+    <insert id="batchInsert">
+        INSERT INTO user_roles (user_id, role_id, created_at, created_by)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.userId}, #{item.roleId}, #{item.createdAt}, #{item.createdBy})
+        </foreach>
+    </insert>
+
+</mapper>

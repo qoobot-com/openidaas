@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qoobot.openidaas.core.mapper.RoleMapper">
+
+    <!-- 根据租户ID分页查询角色 -->
+    <select id="findByTenantId" resultType="com.qoobot.openidaas.core.domain.Role">
+        SELECT * FROM roles
+        WHERE tenant_id = #{tenantId}
+        ORDER BY id DESC
+    </select>
+
+    <!-- 根据角色编码模糊查询（分页） -->
+    <select id="findByRoleCodeContainingAndTenantId" resultType="com.qoobot.openidaas.core.domain.Role">
+        SELECT * FROM roles
+        WHERE role_code LIKE CONCAT('%', #{roleCode}, '%')
+        AND tenant_id = #{tenantId}
+        ORDER BY id DESC
+    </select>
+
+    <!-- 根据角色名称模糊查询（分页） -->
+    <select id="findByRoleNameContainingAndTenantId" resultType="com.qoobot.openidaas.core.domain.Role">
+        SELECT * FROM roles
+        WHERE role_name LIKE CONCAT('%', #{roleName}, '%')
+        AND tenant_id = #{tenantId}
+        ORDER BY id DESC
+    </select>
+
+    <!-- 根据用户ID查找角色列表（通过中间表） -->
+    <select id="findByUserId" resultType="com.qoobot.openidaas.core.domain.Role">
+        SELECT r.* FROM roles r
+        INNER JOIN user_roles ur ON r.id = ur.role_id
+        WHERE ur.user_id = #{userId}
+        ORDER BY r.id DESC
+    </select>
+
+    <!-- 根据权限ID查找角色列表（通过中间表） -->
+    <select id="findByPermissionId" resultType="com.qoobot.openidaas.core.domain.Role">
+        SELECT r.* FROM roles r
+        INNER JOIN role_permissions rp ON r.id = rp.role_id
+        WHERE rp.permission_id = #{permId}
+        ORDER BY r.id DESC
+    </select>
+
+</mapper>

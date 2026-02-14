@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qoobot.openidaas.core.mapper.MenuMapper">
+
+    <!-- 根据菜单名称模糊查询（分页） -->
+    <select id="findByMenuNameContaining" resultType="com.qoobot.openidaas.core.domain.Menu">
+        SELECT * FROM menus
+        WHERE menu_name LIKE CONCAT('%', #{menuName}, '%')
+        ORDER BY sort_order
+    </select>
+
+    <!-- 根据菜单路径模糊查询（分页） -->
+    <select id="findByMenuPathContaining" resultType="com.qoobot.openidaas.core.domain.Menu">
+        SELECT * FROM menus
+        WHERE menu_path LIKE CONCAT('%', #{menuPath}, '%')
+        ORDER BY sort_order
+    </select>
+
+    <!-- 查找用户有权访问的菜单（多表关联） -->
+    <select id="findMenusByUserId" resultType="com.qoobot.openidaas.core.domain.Menu">
+        SELECT DISTINCT m.* FROM menus m
+        INNER JOIN permissions p ON m.permission_obj_id = p.id
+        INNER JOIN role_permissions rp ON p.id = rp.permission_id
+        INNER JOIN user_roles ur ON rp.role_id = ur.role_id
+        WHERE ur.user_id = #{userId}
+        AND m.enabled = 1
+        AND m.hidden = 0
+        ORDER BY m.sort_order
+    </select>
+
+    <!-- 根据角色ID查找菜单列表（多表关联） -->
+    <select id="findMenusByRoleId" resultType="com.qoobot.openidaas.core.domain.Menu">
+        SELECT DISTINCT m.* FROM menus m
+        INNER JOIN permissions p ON m.permission_obj_id = p.id
+        INNER JOIN role_permissions rp ON p.id = rp.permission_id
+        WHERE rp.role_id = #{roleId}
+        AND m.enabled = 1
+        ORDER BY m.sort_order
+    </select>
+
+</mapper>

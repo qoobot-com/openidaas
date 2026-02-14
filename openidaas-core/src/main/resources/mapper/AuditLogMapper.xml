@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qoobot.openidaas.core.mapper.AuditLogMapper">
+
+    <!-- 根据操作类型分页查询审计日志 -->
+    <select id="findByOperationType" resultType="com.qoobot.openidaas.core.domain.AuditLog">
+        SELECT * FROM audit_logs
+        WHERE operation_type = #{operationType}
+        ORDER BY operation_time DESC
+    </select>
+
+    <!-- 根据模块分页查询审计日志 -->
+    <select id="findByModule" resultType="com.qoobot.openidaas.core.domain.AuditLog">
+        SELECT * FROM audit_logs
+        WHERE module = #{module}
+        ORDER BY operation_time DESC
+    </select>
+
+    <!-- 根据操作用户ID分页查询审计日志 -->
+    <select id="findByOperatorId" resultType="com.qoobot.openidaas.core.domain.AuditLog">
+        SELECT * FROM audit_logs
+        WHERE operator_id = #{operatorId}
+        ORDER BY operation_time DESC
+    </select>
+
+    <!-- 根据租户ID分页查询审计日志 -->
+    <select id="findByTenantId" resultType="com.qoobot.openidaas.core.domain.AuditLog">
+        SELECT * FROM audit_logs
+        WHERE tenant_id = #{tenantId}
+        ORDER BY operation_time DESC
+    </select>
+
+    <!-- 根据应用ID分页查询审计日志 -->
+    <select id="findByAppId" resultType="com.qoobot.openidaas.core.domain.AuditLog">
+        SELECT * FROM audit_logs
+        WHERE app_id = #{appId}
+        ORDER BY operation_time DESC
+    </select>
+
+    <!-- 根据操作结果分页查询审计日志 -->
+    <select id="findByResult" resultType="com.qoobot.openidaas.core.domain.AuditLog">
+        SELECT * FROM audit_logs
+        WHERE result = #{result}
+        ORDER BY operation_time DESC
+    </select>
+
+    <!-- 根据时间范围分页查询审计日志 -->
+    <select id="findByOperationTimeBetween" resultType="com.qoobot.openidaas.core.domain.AuditLog">
+        SELECT * FROM audit_logs
+        WHERE operation_time BETWEEN #{startTime} AND #{endTime}
+        ORDER BY operation_time DESC
+    </select>
+
+    <!-- 根据操作用户ID和时间范围分页查询审计日志 -->
+    <select id="findByOperatorIdAndOperationTimeBetween" resultType="com.qoobot.openidaas.core.domain.AuditLog">
+        SELECT * FROM audit_logs
+        WHERE operator_id = #{operatorId}
+        AND operation_time BETWEEN #{startTime} AND #{endTime}
+        ORDER BY operation_time DESC
+    </select>
+
+    <!-- 根据租户ID和时间范围分页查询审计日志 -->
+    <select id="findByTenantIdAndOperationTimeBetween" resultType="com.qoobot.openidaas.core.domain.AuditLog">
+        SELECT * FROM audit_logs
+        WHERE tenant_id = #{tenantId}
+        AND operation_time BETWEEN #{startTime} AND #{endTime}
+        ORDER BY operation_time DESC
+    </select>
+
+    <!-- 统计模块操作次数 -->
+    <select id="countByModuleAndOperationTimeBetween" resultType="java.lang.Object">
+        SELECT module, COUNT(*) as count
+        FROM audit_logs
+        WHERE operation_time BETWEEN #{startTime} AND #{endTime}
+        GROUP BY module
+        ORDER BY count DESC
+    </select>
+
+    <!-- 统计操作类型分布 -->
+    <select id="countByOperationTypeAndOperationTimeBetween" resultType="java.lang.Object">
+        SELECT operation_type, COUNT(*) as count
+        FROM audit_logs
+        WHERE operation_time BETWEEN #{startTime} AND #{endTime}
+        GROUP BY operation_type
+        ORDER BY count DESC
+    </select>
+
+</mapper>

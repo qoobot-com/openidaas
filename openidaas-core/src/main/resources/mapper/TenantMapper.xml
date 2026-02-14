@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qoobot.openidaas.core.mapper.TenantMapper">
+
+    <!-- 根据启用状态分页查询租户 -->
+    <select id="findByEnabled" resultType="com.qoobot.openidaas.core.domain.Tenant">
+        SELECT * FROM tenants
+        WHERE enabled = #{enabled}
+        ORDER BY id DESC
+    </select>
+
+    <!-- 根据租户名称模糊查询（分页） -->
+    <select id="findByTenantNameContaining" resultType="com.qoobot.openidaas.core.domain.Tenant">
+        SELECT * FROM tenants
+        WHERE tenant_name LIKE CONCAT('%', #{tenantName}, '%')
+        ORDER BY id DESC
+    </select>
+
+    <!-- 根据租户编码模糊查询（分页） -->
+    <select id="findByTenantCodeContaining" resultType="com.qoobot.openidaas.core.domain.Tenant">
+        SELECT * FROM tenants
+        WHERE tenant_code LIKE CONCAT('%', #{tenantCode}, '%')
+        ORDER BY id DESC
+    </select>
+
+    <!-- 统计各状态租户数量 -->
+    <select id="countByStatus" resultType="java.lang.Object">
+        SELECT status, COUNT(*) as count
+        FROM tenants
+        GROUP BY status
+    </select>
+
+</mapper>
