@@ -1,5 +1,8 @@
 package com.qoobot.openidaas.core.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qoobot.openidaas.common.dto.user.UserCreateDTO;
 import com.qoobot.openidaas.common.dto.user.UserQueryDTO;
 import com.qoobot.openidaas.common.dto.user.UserUpdateDTO;
@@ -8,27 +11,27 @@ import com.qoobot.openidaas.common.exception.BusinessException;
 import com.qoobot.openidaas.common.util.PasswordUtil;
 import com.qoobot.openidaas.common.vo.PageResultVO;
 import com.qoobot.openidaas.common.vo.user.UserVO;
+import com.qoobot.openidaas.core.domain.Role;
 import com.qoobot.openidaas.core.domain.User;
-import com.qoobot.openidaas.core.repository.UserRepository;
+import com.qoobot.openidaas.core.domain.UserRole;
+import com.qoobot.openidaas.core.mapper.PermissionMapper;
+import com.qoobot.openidaas.core.mapper.UserMapper;
+import com.qoobot.openidaas.core.mapper.UserRoleMapper;
+import com.qoobot.openidaas.core.mapper.UserDepartmentMapper;
 import com.qoobot.openidaas.core.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * 用户服务实现类
+ * 用户服务实现类（MyBatis-Plus版本）
  *
  * @author QooBot
  */
@@ -38,7 +41,10 @@ import java.util.Set;
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
-    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final UserRoleMapper userRoleMapper;
+    private final UserDepartmentMapper userDepartmentMapper;
+    private final PermissionMapper permissionMapper;
 
     @Override
     @Transactional
@@ -55,8 +61,9 @@ public class UserServiceImpl implements UserService {
         user.setTenantId(userCreateDTO.getTenantId());
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
-        
-        return userRepository.save(user);
+
+        userMapper.insert(user);
+        return user;
     }
 
     @Override
@@ -66,7 +73,7 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
-        
+
         if (StringUtils.hasText(userUpdateDTO.getEmail())) {
             user.setEmail(userUpdateDTO.getEmail());
         }
@@ -82,9 +89,10 @@ public class UserServiceImpl implements UserService {
         if (userUpdateDTO.getGender() != null) {
             user.setGender(userUpdateDTO.getGender());
         }
-        
+
         user.setUpdatedAt(LocalDateTime.now());
-        return userRepository.save(user);
+        userMapper.updateById(user);
+        return user;
     }
 
     @Override
@@ -94,112 +102,128 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
-        userRepository.delete(user);
+        // 删除用户角色关联
+        userRoleMapper.deleteByUserId(userId);
+        // 删除用户部门关联
+        userDepartmentMapper.deleteByUserId(userId);
+        // 删除用户
+        userMapper.deleteById(userId);
     }
 
     @Override
     @Transactional
     public void deleteUsers(Set<Long> userIds) {
-        for (Long userId : userIds) {
-            deleteUser(userId);
+        if (userIds == null || userIds.isEmpty()) {
+            return;
         }
+        // 批量删除用户角色关联
+        userIds.forEach(userRoleMapper::deleteByUserId);
+        // 批量删除用户部门关联
+        userIds.forEach(userDepartmentMapper::deleteByUserId);
+        // 批量删除用户
+        userMapper.deleteBatchIds(userIds);
     }
 
     @Override
     public User getUserById(Long userId) {
-        return userRepository.findById(userId).orElse(null);
+        return userMapper.selectById(userId);
     }
 
     @Override
     public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username).orElse(null);
+        return userMapper.findByUsername(username);
     }
 
     @Override
     public PageResultVO<UserVO> queryUsers(UserQueryDTO queryDTO) {
-        Pageable pageable = PageRequest.of(
-            queryDTO.getPage().intValue() - 1, 
-            queryDTO.getSize().intValue()
-        );
-        
-        Specification<User> spec = (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            
-            if (StringUtils.hasText(queryDTO.getUsername())) {
-                predicates.add(criteriaBuilder.like(root.get("username"), "%" + queryDTO.getUsername() + "%"));
-            }
-            if (StringUtils.hasText(queryDTO.getNickname())) {
-                predicates.add(criteriaBuilder.like(root.get("nickname"), "%" + queryDTO.getNickname() + "%"));
-            }
-            if (queryDTO.getStatus() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("status"), queryDTO.getStatus()));
-            }
-            if (queryDTO.getTenantId() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("tenantId"), queryDTO.getTenantId()));
-            }
-            
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        };
-        
-        Page<User> page = userRepository.findAll(spec, pageable);
-        
-        List<UserVO> userVOs = page.getContent().stream()
+        // 使用LambdaQueryWrapper替代Specification
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.like(StringUtils.hasText(queryDTO.getUsername()), User::getUsername, queryDTO.getUsername())
+               .like(StringUtils.hasText(queryDTO.getNickname()), User::getNickname, queryDTO.getNickname())
+               .eq(queryDTO.getStatus() != null, User::getStatus, queryDTO.getStatus())
+               .eq(queryDTO.getTenantId() != null, User::getTenantId, queryDTO.getTenantId())
+               .orderByDesc(User::getCreatedAt);
+
+        // 创建MyBatis-Plus分页对象
+        Page<User> page = new Page<>(queryDTO.getPage(), queryDTO.getSize());
+        IPage<User> result = userMapper.selectPage(page, wrapper);
+
+        List<UserVO> userVOs = result.getRecords().stream()
                 .map(this::convertToVO)
-                .toList();
-        
-        return new PageResultVO<UserVO>(
-                page.getNumber() + 1L,
-                (long) page.getSize(),
-                page.getTotalElements(),
+                .collect(Collectors.toList());
+
+        return new PageResultVO<>(
+                result.getCurrent(),
+                result.getSize(),
+                result.getTotal(),
                 userVOs
         );
     }
 
     @Override
     public List<Long> getUserRoleIds(Long userId) {
-        User user = getUserById(userId);
-        if (user != null && user.getRoles() != null) {
-            return user.getRoles().stream()
-                    .map(role -> role.getId())
-                    .toList();
-        }
-        return List.of();
+        return userRoleMapper.findRoleIdsByUserId(userId);
     }
 
     @Override
     public List<String> getUserPermissions(Long userId) {
-        User user = getUserById(userId);
-        if (user != null && user.getPermissions() != null) {
-            return user.getPermissions().stream()
-                    .map(permission -> permission.getPermCode())
-                    .toList();
-        }
-        return List.of();
+        // 通过Mapper直接查询用户权限
+        return permissionMapper.findByUserId(userId).stream()
+                .map(permission -> permission.getPermCode())
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<String> getUserMenuPermissions(Long userId) {
-        User user = getUserById(userId);
-        if (user != null && user.getPermissions() != null) {
-            return user.getPermissions().stream()
-                    .filter(permission -> "menu".equals(permission.getPermType()))
-                    .map(permission -> permission.getPermCode())
-                    .toList();
-        }
-        return List.of();
+        // 通过Mapper查询用户菜单权限
+        return permissionMapper.findByUserId(userId).stream()
+                .filter(permission -> "menu".equals(permission.getPermType()))
+                .map(permission -> permission.getPermCode())
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public void assignRolesToUser(Long userId, Set<Long> roleIds) {
-        // 实现角色分配逻辑
+        // 先删除原有角色关联
+        userRoleMapper.deleteByUserId(userId);
+
+        // 批量插入新的角色关联
+        if (roleIds != null && !roleIds.isEmpty()) {
+            List<UserRole> userRoles = roleIds.stream()
+                    .map(roleId -> {
+                        UserRole userRole = new UserRole();
+                        userRole.setUserId(userId);
+                        userRole.setRoleId(roleId);
+                        return userRole;
+                    })
+                    .collect(Collectors.toList());
+            userRoleMapper.batchInsert(userRoles);
+        }
+
         log.info("为用户{}分配角色: {}", userId, roleIds);
     }
 
     @Override
     @Transactional
     public void assignDepartmentsToUser(Long userId, Set<Long> deptIds) {
-        // 实现部门分配逻辑
+        // 先删除原有部门关联
+        userDepartmentMapper.deleteByUserId(userId);
+
+        // 批量插入新的部门关联
+        if (deptIds != null && !deptIds.isEmpty()) {
+            List<com.qoobot.openidaas.core.domain.UserDepartment> userDepts = deptIds.stream()
+                    .map(deptId -> {
+                        com.qoobot.openidaas.core.domain.UserDepartment userDept =
+                            new com.qoobot.openidaas.core.domain.UserDepartment();
+                        userDept.setUserId(userId);
+                        userDept.setDepartmentId(deptId);
+                        return userDept;
+                    })
+                    .collect(Collectors.toList());
+            userDepartmentMapper.batchInsert(userDepts);
+        }
+
         log.info("为用户{}分配部门: {}", userId, deptIds);
     }
 
@@ -210,13 +234,13 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
-        
+
         user.setPassword(PasswordUtil.encode(newPassword));
         user.setPwdResetTime(LocalDateTime.now());
         user.setPwdResetRequired(false);
         user.setUpdatedAt(LocalDateTime.now());
-        
-        userRepository.save(user);
+
+        userMapper.updateById(user);
     }
 
     @Override
@@ -226,12 +250,12 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
-        
+
         user.setStatus(UserStatusEnum.LOCKED);
         user.setLockTime(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
-        
-        userRepository.save(user);
+
+        userMapper.updateById(user);
     }
 
     @Override
@@ -241,13 +265,13 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
-        
+
         user.setStatus(UserStatusEnum.NORMAL);
         user.setLockTime(null);
         user.setLoginFailCount(0);
         user.setUpdatedAt(LocalDateTime.now());
-        
-        userRepository.save(user);
+
+        userMapper.updateById(user);
     }
 
     @Override
@@ -257,11 +281,11 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
-        
+
         user.setEnabled(true);
         user.setUpdatedAt(LocalDateTime.now());
-        
-        userRepository.save(user);
+
+        userMapper.updateById(user);
     }
 
     @Override
@@ -271,11 +295,11 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
-        
+
         user.setEnabled(false);
         user.setUpdatedAt(LocalDateTime.now());
-        
-        userRepository.save(user);
+
+        userMapper.updateById(user);
     }
 
     @Override
@@ -285,13 +309,13 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
-        
+
         user.setLastLoginTime(LocalDateTime.now());
         user.setLastLoginIp(ip);
         user.setLoginFailCount(0);
         user.setUpdatedAt(LocalDateTime.now());
-        
-        userRepository.save(user);
+
+        userMapper.updateById(user);
     }
 
     @Override
@@ -301,11 +325,11 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
-        
+
         user.setLoginFailCount(user.getLoginFailCount() + 1);
         user.setUpdatedAt(LocalDateTime.now());
-        
-        userRepository.save(user);
+
+        userMapper.updateById(user);
     }
 
     @Override
@@ -315,11 +339,11 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
-        
+
         user.setLoginFailCount(0);
         user.setUpdatedAt(LocalDateTime.now());
-        
-        userRepository.save(user);
+
+        userMapper.updateById(user);
     }
 
     @Override
@@ -328,8 +352,8 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             return false;
         }
-        
-        return user.getEnabled() && 
+
+        return user.getEnabled() &&
                user.getStatus() == UserStatusEnum.NORMAL &&
                (user.getLockTime() == null || user.getLockTime().isBefore(LocalDateTime.now().minusMinutes(30)));
     }
